@@ -1,3 +1,4 @@
-cd build/
-cmake --build .
-./Debug/NES.exe
+cd out/build
+cmake ../.. -G "Visual Studio 17 2022" -DCMAKE_TOOLCHAIN_FILE="deps\conan\conan_toolchain.cmake" -DCMAKE_BUILD_TYPE=Debug
+cmake --build . --config Debug
+Debug\nes.exe
