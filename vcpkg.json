@@ -1,5 +1,13 @@
 {
     "dependencies": [
-      "fmt"
+      "fmt",
+      "spdlog",
+      "glfw3",
+      "glew",
+      "glm",
+      "imgui"
+    ],
+    "overrides": [
+      {"name": "imgui", "version": "1.91.0"}
     ]
   }

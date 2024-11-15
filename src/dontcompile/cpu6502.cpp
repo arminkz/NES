@@ -132,6 +132,11 @@ uint8_t CPU6502::fetch()
     return fetched;
 }
 
+bool CPU6502::complete()
+{
+    return cycles == 0;
+}
+
 uint8_t CPU6502::getFlag(FLAGS6502 f)
 {
     return ((status & f) > 0) ? 1 : 0;
@@ -327,12 +332,89 @@ uint8_t CPU6502::AND()
     return 1;
 }
 
+//Logical OR
+uint8_t CPU6502::ORA()
+{
+    fetch();
+    a = a | fetched;
+    setFlag(Z, a == 0x00);
+    setFlag(N, a & 0x80);
+    return 1;
+}
+
+//Exclusive OR
+uint8_t CPU6502::EOR()
+{
+    fetch();
+    a = a ^ fetched;
+    setFlag(Z, a == 0x00);
+    setFlag(N, a & 0x80);
+    return 1;
+}
+
 //Arithmetic Shift Left
 uint8_t CPU6502::ASL()
 {
     fetch();
     uint16_t temp = (uint16_t)fetched << 1;
     setFlag(C, (temp & 0xFF00) > 0);
+    setFlag(Z, (temp & 0x00FF) == 0x00);
+    setFlag(N, temp & 0x80);
+    if (lookup[opcode].addrmode == &CPU6502::IMP)
+    {
+        a = temp & 0x00FF;
+    }
+    else
+    {
+        write(addr_abs, temp & 0x00FF);
+    }
+    return 0;
+}
+
+//Logical Shift Right
+uint8_t CPU6502::LSR()
+{
+    fetch();
+    setFlag(C, fetched & 0x0001);
+    uint16_t temp = fetched >> 1;
+    setFlag(Z, (temp & 0x00FF) == 0x00);
+    setFlag(N, temp & 0x80);
+    if (lookup[opcode].addrmode == &CPU6502::IMP)
+    {
+        a = temp & 0x00FF;
+    }
+    else
+    {
+        write(addr_abs, temp & 0x00FF);
+    }
+    return 0;
+}
+
+//Rotate Left
+uint8_t CPU6502::ROL()
+{
+    fetch();
+    uint16_t temp = (uint16_t)(fetched << 1) | getFlag(C);
+    setFlag(C, temp & 0xFF00);
+    setFlag(Z, (temp & 0x00FF) == 0x00);
+    setFlag(N, temp & 0x80);
+    if (lookup[opcode].addrmode == &CPU6502::IMP)
+    {
+        a = temp & 0x00FF;
+    }
+    else
+    {
+        write(addr_abs, temp & 0x00FF);
+    }
+    return 0;
+}
+
+//Rotate Right
+uint8_t CPU6502::ROR()
+{
+    fetch();
+    uint16_t temp = (uint16_t)(getFlag(C) << 7) | (fetched >> 1);
+    setFlag(C, fetched & 0x01);
     setFlag(Z, (temp & 0x00FF) == 0x00);
     setFlag(N, temp & 0x80);
     if (lookup[opcode].addrmode == &CPU6502::IMP)
@@ -373,16 +455,6 @@ uint8_t CPU6502::DEY()
     setFlag(Z, y == 0x00);
     setFlag(N, y & 0x80);
     return 0;
-}
-
-//Exclusive OR
-uint8_t CPU6502::EOR()
-{
-    fetch();
-    a = a ^ fetched;
-    setFlag(Z, a == 0x00);
-    setFlag(N, a & 0x80);
-    return 1;
 }
 
 //Increment Value at Memory Location
@@ -547,13 +619,6 @@ uint8_t CPU6502::BVS()
     return 0;
 }
 
-//Jump to New Location
-uint8_t CPU6502::JMP()
-{
-    pc = addr_abs;
-    return 0;
-}
-
 /////////////////////////////////////////////////////////////////////////////////////
 //Clear and Set Instructions
 
@@ -582,6 +647,27 @@ uint8_t CPU6502::CLI()
 uint8_t CPU6502::CLV()
 {
     setFlag(V, 0);
+    return 0;
+}
+
+//Set Carry Flag
+uint8_t CPU6502::SEC()
+{
+    setFlag(C, 1);
+    return 0;
+}
+
+//Set Decimal Flag
+uint8_t CPU6502::SED()
+{
+    setFlag(D, 1);
+    return 0;
+}
+
+//Set Interrupt Flag (Disable Interrupts)
+uint8_t CPU6502::SEI()
+{
+    setFlag(I, 1);
     return 0;
 }
 
@@ -624,15 +710,147 @@ uint8_t CPU6502::CPY()
 
 
 /////////////////////////////////////////////////////////////////////////////////////
-//Flag Instructions
+//Transfer Instructions
+
+//Transfer Accumulator to X Register
+uint8_t CPU6502::TAX()
+{
+    x = a;
+    setFlag(Z, x == 0x00);
+    setFlag(N, x & 0x80);
+    return 0;
+}
+
+//Transfer Accumulator to Y Register
+uint8_t CPU6502::TAY()
+{
+    y = a;
+    setFlag(Z, y == 0x00);
+    setFlag(N, y & 0x80);
+    return 0;
+}
+
+//Transfer Stack Pointer to X Register
+uint8_t CPU6502::TSX()
+{
+    x = stkp;
+    setFlag(Z, x == 0x00);
+    setFlag(N, x & 0x80);
+    return 0;
+}
+
+//Transfer X Register to Accumulator
+uint8_t CPU6502::TXA()
+{
+    a = x;
+    setFlag(Z, a == 0x00);
+    setFlag(N, a & 0x80);
+    return 0;
+}
+
+//Transfer X Register to Stack Pointer
+uint8_t CPU6502::TXS()
+{
+    stkp = x;
+    return 0;
+}
+
+//Transfer Y Register to Accumulator
+uint8_t CPU6502::TYA()
+{
+    a = y;
+    setFlag(Z, a == 0x00);
+    setFlag(N, a & 0x80);
+    return 0;
+}
 
 
 /////////////////////////////////////////////////////////////////////////////////////
 //Jump and Call Instructions
 
+//Jump to New Location
+uint8_t CPU6502::JMP()
+{
+    pc = addr_abs;
+    return 0;
+}
+
+//Jump to Subroutine
+uint8_t CPU6502::JSR()
+{
+    pc--;
+    write(0x0100 + stkp, (pc >> 8) & 0x00FF);
+    stkp--;
+    write(0x0100 + stkp, pc & 0x00FF);
+    stkp--;
+    pc = addr_abs;
+    return 0;
+}
+
+//Return from Subroutine
+uint8_t CPU6502::RTS()
+{
+    stkp++;
+    pc = read(0x0100 + stkp);
+    stkp++;
+    pc |= (uint16_t)read(0x0100 + stkp) << 8;
+    pc++;
+    return 0;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////
-//Load Instructions
+//Load and Store Instructions
+
+//Load Accumulator
+uint8_t CPU6502::LDA()
+{
+    fetch();
+    a = fetched;
+    setFlag(Z, a == 0x00);
+    setFlag(N, a & 0x80);
+    return 1;
+}
+
+//Load X Register
+uint8_t CPU6502::LDX()
+{
+    fetch();
+    x = fetched;
+    setFlag(Z, x == 0x00);
+    setFlag(N, x & 0x80);
+    return 1;
+}
+
+//Load Y Register
+uint8_t CPU6502::LDY()
+{
+    fetch();
+    y = fetched;
+    setFlag(Z, y == 0x00);
+    setFlag(N, y & 0x80);
+    return 1;
+}
+
+//Store Accumulator
+uint8_t CPU6502::STA()
+{
+    write(addr_abs, a);
+    return 0;
+}
+
+//Store X Register
+uint8_t CPU6502::STX()
+{
+    write(addr_abs, x);
+    return 0;
+}
+
+//Store Y Register
+uint8_t CPU6502::STY()
+{
+    write(addr_abs, y);
+    return 0;
+}
 
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -653,6 +871,25 @@ uint8_t CPU6502::PLA()
     a = read(0x0100 + stkp);
     setFlag(Z, a == 0x00);
     setFlag(N, a & 0x80);
+    return 0;
+}
+
+//Push Status Register to Stack
+uint8_t CPU6502::PHP()
+{
+    write(0x0100 + stkp, status | B | U);
+    setFlag(B, 0);
+    setFlag(U, 0);
+    stkp--;
+    return 0;
+}
+
+//Pop from Stack to Status Register
+uint8_t CPU6502::PLP()
+{
+    stkp++;
+    status = read(0x0100 + stkp);
+    setFlag(U, 1);
     return 0;
 }
 
@@ -701,5 +938,32 @@ uint8_t CPU6502::RTI()
     pc = (uint16_t)read(0x0100 + stkp);
     stkp++;
     pc |= (uint16_t)read(0x0100 + stkp) << 8;
+    return 0;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+//Miscellaneous Instructions
+
+//No Operation
+uint8_t CPU6502::NOP()
+{
+    switch(opcode)
+    {
+        case 0x1C:
+        case 0x3C:
+        case 0x5C:
+        case 0x7C:
+        case 0xDC:
+        case 0xFC:
+            return 1;
+            break;
+    }
+    return 0;
+}
+
+//illegal opcode
+uint8_t CPU6502::XXX()
+{
+    std::cout << "Illegal opcode" << std::endl;
     return 0;
 }
