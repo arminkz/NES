@@ -3,6 +3,7 @@
 #include "stdafx.h"
 
 #include "GUI.h"
+#include "Renderer.h"
 
 
 Window::Window() : Singleton(), _size(glm::ivec2(1,1)), _window(nullptr), _windowState(NOT_LOADED)
@@ -62,7 +63,7 @@ bool Window::initialize(const std::string& title, const uint16_t width, const ui
 	//spdlog::info("Input callbacks are set.");
 
 	// OpenGL environment
-	//Renderer::getInstance()->initialize();
+	Renderer::getInstance()->initialize();
 	GUI::getInstance()->initialize(_window, openGL4Version);
 
 	//InputManager::getInstance()->initialize(_window);
@@ -81,7 +82,7 @@ void Window::startRenderingCycle()
 	while (!glfwWindowShouldClose(_window)) {
 		//InputManager::getInstance()->windowRefresh(_window);
 
-		//Renderer::getInstance()->render();
+		Renderer::getInstance()->render();
 		GUI::getInstance()->render();
 
 		glfwSwapBuffers(_window);
