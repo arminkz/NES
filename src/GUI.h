@@ -22,6 +22,8 @@ protected:
 protected:
 	GUI();
 
+	void initializeDockSpace();
+
 	void createElements();
 
 	void showAboutUsWindow();

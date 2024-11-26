@@ -2,12 +2,16 @@ cmake_minimum_required(VERSION 3.20)
 
 project(NES CXX)
 
+set (CMAKE_CXX_STANDARD 20)
+set (CMAKE_CXX_STANDARD_REQUIRED ON)
+
+
 find_package(fmt REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glew REQUIRED)
 find_package(glm REQUIRED)
-find_package(imgui REQUIRED)
+# find_package(imgui REQUIRED)
 
 set(LIBRARIES
     fmt::fmt
@@ -15,10 +19,13 @@ set(LIBRARIES
     glfw
     GLEW::GLEW        
     glm::glm
-    imgui::imgui
+    ImGui
 )
 
 include_directories(src)
+include_directories("${CMAKE_SOURCE_DIR}/external/imgui")
+
+add_subdirectory("${CMAKE_SOURCE_DIR}/external")
 
 # Handle .cpp files (cmake recommends manually inputing each filename here) (i cant do that !)
 file(GLOB SOURCES
