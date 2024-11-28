@@ -1,10 +1,13 @@
 #pragma once
+
 #include <cstdint>
 #include <string>
 #include <vector>
 #include <iostream>
 
-#include <nes.h>
+//#include <NES.h> (circular)
+// Forward declaration to prevent circular inclusions
+class NES;
 
 class CPU6502 {
 public:
@@ -66,14 +69,8 @@ public:
     uint8_t cycles = 0;
     bool complete();
 
-public:
-    CPU6502();
-    ~CPU6502();
-
-    void connectBus(NES *n) { bus = n; }
-
 private:
-    NES *bus = nullptr;
+    std::unique_ptr<NES> bus = nullptr;
 
     uint8_t read(uint16_t addr);
     void write(uint16_t addr, uint8_t data);
@@ -90,4 +87,12 @@ private:
 
     //lookup table
     std::vector<INSTRUCTION> lookup;
+
+public:
+    CPU6502();
+    ~CPU6502();
+
+    void connectBus(NES* n) { 
+        bus = std::unique_ptr<NES>(n);
+    }
 };

@@ -1,16 +1,21 @@
 #pragma once
+
 #include <cstdint>
 #include <array>
 
-//#include "cpu6502.h"
+#include "utilities/Singleton.h"
 
-class NES {
+#include "cpu6502.h"
+
+class NES : public Singleton<NES>{
+    friend class Singleton<NES>;
+
 public:
     NES();
     ~NES();
 
-public: //Devices on the NES
-    //CPU6502 cpu;
+    //Devices on the NES
+    CPU6502 cpu;
     
     //Fake RAM for now (64KB)
     std::array<uint8_t, 64 * 1024> ram;

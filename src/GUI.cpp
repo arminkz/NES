@@ -1,5 +1,7 @@
 #include "GUI.h"
 
+#include "NES.h"
+#include "cpu6502.h"
 
 /// [Protected methods]
 
@@ -31,8 +33,7 @@ void GUI::createElements()
 
         if (ImGui::BeginMenu(ICON_FA_BINOCULARS "View"))
 		{
-			ImGui::MenuItem(ICON_FA_INFO "About the project", NULL, &_showAboutUs);
-			ImGui::MenuItem(ICON_FA_GAMEPAD "Controls", NULL, &_showControls);
+			ImGui::MenuItem(ICON_FA_CODE "Developer Tools", NULL, &_showDeveloperTools);
 			ImGui::EndMenu();
 		}
 
@@ -132,6 +133,51 @@ void GUI::showFileDialog()
 
 void GUI::showDeveloperTools()
 {
+	if (ImGui::Begin("Developer Tools", &_showDeveloperTools))
+	{
+		ImGui::Text("CPU: ");
+		ImGui::Text("A: %02X   X: %02X   Y: %02X   PC: %04X   SP: %02X", 
+		NES::getInstance()->cpu.a, 
+		NES::getInstance()->cpu.x, 
+		NES::getInstance()->cpu.y, 
+		NES::getInstance()->cpu.pc, 
+		NES::getInstance()->cpu.stkp);
+
+		ImGui::Text("Status: ");
+
+		auto print_status_bit = [](CPU6502::FLAGS6502 flag, const char* label) 
+    	{ 
+			uint32_t green = IM_COL32(0,255,0,255);
+			uint32_t red = IM_COL32(255,0,0,255);
+			uint32_t color = NES::getInstance()->cpu.status & flag ? green : red;
+			ImGui::PushStyleColor(ImGuiCol_Text, color);
+			ImGui::SameLine();
+			ImGui::Text("%s", label);
+			ImGui::PopStyleColor();
+    	};
+
+		print_status_bit(CPU6502::FLAGS6502::C, "C");
+		print_status_bit(CPU6502::FLAGS6502::Z, "Z");
+		print_status_bit(CPU6502::FLAGS6502::I, "I");
+		print_status_bit(CPU6502::FLAGS6502::D, "D");
+		print_status_bit(CPU6502::FLAGS6502::B, "B");
+		print_status_bit(CPU6502::FLAGS6502::U, "U");
+		print_status_bit(CPU6502::FLAGS6502::V, "V");
+		print_status_bit(CPU6502::FLAGS6502::N, "N");
+
+		ImGui::NewLine();
+		ImGui::Text("RAM:");
+
+		for (int i = 0; i < 64 * 1024; i++) {
+			if (i % 16 == 0) {
+				//ImGui::NewLine();
+				ImGui::Text("%04X: ", i);
+			}
+			ImGui::SameLine();
+			ImGui::Text("%02X ", NES::getInstance()->ram[i]);
+		}		
+	}
+	ImGui::End();
 }
 
 void GUI::showSettings()
@@ -203,6 +249,8 @@ void GUI::showSettings()
 
 GUI::~GUI()
 {
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 }
 
