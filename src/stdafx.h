@@ -37,8 +37,10 @@
 #include <filesystem>
 #include <experimental/filesystem>
 #include <streambuf>
+#include <format>
 
 // [Standard libraries: data structures]
+#include <array>
 #include <map>
 #include <set>
 #include <unordered_map>

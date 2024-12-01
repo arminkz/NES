@@ -17,6 +17,7 @@ protected:
 	bool _showAboutUs;						//!< About us window
 	bool _showControls;						//!< Shows application controls
 	bool _showDeveloperTools;				//!< Shows developer tools
+	bool _showLoadAssemly;					//!< Shows Load Assembly window
 	bool _showSettings;			            //!< Displays application settings
 
 protected:
@@ -33,6 +34,8 @@ protected:
     void showFileDialog();
 
 	void showDeveloperTools();
+
+	void showLoadAssembly();
 
 	void showSettings();
 
