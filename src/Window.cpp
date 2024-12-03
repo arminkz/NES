@@ -2,9 +2,10 @@
 
 #include "stdafx.h"
 
+
 #include "GUI.h"
-#include "Renderer.h"
 #include "NES.h"
+#include "Renderer.h"
 
 
 Window::Window() : Singleton(), _size(glm::ivec2(1,1)), _window(nullptr), _windowState(NOT_LOADED)
@@ -61,8 +62,7 @@ bool Window::initialize(const std::string& title, const uint16_t width, const ui
 	//glfwSetMouseButtonCallback(_window, InputManager::mouseButtonEvent);
 	//glfwSetCursorPosCallback(_window, InputManager::mouseCursorEvent);
 	//glfwSetScrollCallback(_window, InputManager::mouseScrollEvent);
-	
-	spdlog::debug("Input callbacks are set.");
+	//spdlog::info("Input callbacks are set.");
 
 	// OpenGL environment
 	Renderer::getInstance()->initialize();

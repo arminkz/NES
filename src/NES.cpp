@@ -3,6 +3,9 @@
 NES::NES() {
     //Clear RAM contents
     for (uint8_t &i : ram) i = 0x00;
+
+    //Connect CPU to NES Bus
+    cpu.connectBus(this);
 }
 
 NES::~NES() {
@@ -49,8 +52,21 @@ void NES::processPressedKeyEvent(const int key, const int mods)
     switch(key) {
         case GLFW_KEY_R:
             //Reset
+            cpu.reset();
             spdlog::info("Reset called.");
             break;
+        case GLFW_KEY_C:
+            //Clock CPU
+            cpu.clock();
+            spdlog::info("Clock called.");
+            break;
+        case GLFW_KEY_SPACE:
+            //Clock until complete
+            do
+			{
+				cpu.clock();
+			} 
+			while (!cpu.complete());
     }
     //Do something
 }

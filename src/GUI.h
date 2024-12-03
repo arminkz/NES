@@ -17,8 +17,11 @@ protected:
 	bool _showAboutUs;						//!< About us window
 	bool _showControls;						//!< Shows application controls
 	bool _showDeveloperTools;				//!< Shows developer tools
-	bool _showLoadAssemly;					//!< Shows Load Assembly window
+	bool _showLoadAssembly;					//!< Shows Load Assembly window
 	bool _showSettings;			            //!< Displays application settings
+
+private:
+	char _assemblyString[1024] = "A2 0A 8E 00 00 A2 03 8E 01 00 AC 00 00 A9 00 18 6D 01 00 88 D0 FA 8D 02 00 EA EA EA";				
 
 protected:
 	GUI();

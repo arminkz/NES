@@ -9,7 +9,8 @@ GUI::GUI() :
 	_showSettings(false), 
 	_showAboutUs(false),
 	_showControls(false), 
-	_showDeveloperTools(false)
+	_showDeveloperTools(false),
+	_showLoadAssembly(false)
 {
 }
 
@@ -21,6 +22,7 @@ void GUI::createElements()
 	if (_showAboutUs)		    showAboutUsWindow();
 	if (_showControls)		    showControls();
 	if (_showDeveloperTools)    showDeveloperTools();
+	if (_showLoadAssembly) 	    showLoadAssembly();
 
 	if (ImGui::BeginMainMenuBar())
 	{
@@ -34,6 +36,7 @@ void GUI::createElements()
         if (ImGui::BeginMenu(ICON_FA_BINOCULARS "View"))
 		{
 			ImGui::MenuItem(ICON_FA_CODE "Developer Tools", NULL, &_showDeveloperTools);
+			ImGui::MenuItem(ICON_FA_CODE "Load Assembly", NULL, &_showLoadAssembly);
 			ImGui::EndMenu();
 		}
 
@@ -176,6 +179,48 @@ void GUI::showDeveloperTools()
 			ImGui::SameLine();
 			ImGui::Text("%02X ", NES::getInstance()->ram[i]);
 		}		
+	}
+	ImGui::End();
+}
+
+void GUI::showLoadAssembly()
+{
+	if (ImGui::Begin("Load Assembly", &_showLoadAssembly))
+	{
+		ImGui::Text("Load Assembly");
+		ImGui::Separator();
+
+		ImGui::Text("Enter Assembled Code: ");
+		ImGui::InputTextMultiline("##AssemblyFile", _assemblyString, IM_ARRAYSIZE(_assemblyString),
+                                  ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 8),
+                                  ImGuiInputTextFlags_None);
+
+		if (ImGui::Button("Load"))
+		{
+			// Load assembly file
+			spdlog::info("Loading assembly...");
+			spdlog::info("Assembly Hex: {}", _assemblyString);
+
+			std::stringstream ss;
+			ss << _assemblyString;
+
+			uint16_t nOffset = 0x8000;
+			while (!ss.eof())
+			{
+				std::string b;
+				ss >> b;
+				NES::getInstance()->ram[nOffset++] = (uint8_t)std::stoul(b, nullptr, 16);
+				spdlog::info("Loaded in {}: {}",nOffset-1, b);
+			}
+
+			// Set Reset Vector
+			NES::getInstance()->ram[0xFFFC] = 0x00;
+			NES::getInstance()->ram[0xFFFD] = 0x80;
+			spdlog::info("Reset Vector set to 0x8000.");
+
+			NES::getInstance()->cpu.reset();
+			spdlog::info("Assembly Hex loaded.");
+		}
 	}
 	ImGui::End();
 }
