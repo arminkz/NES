@@ -209,14 +209,12 @@ void GUI::showLoadAssembly()
 			{
 				std::string b;
 				ss >> b;
-				NES::getInstance()->ram[nOffset++] = (uint8_t)std::stoul(b, nullptr, 16);
-				spdlog::info("Loaded in {}: {}",nOffset-1, b);
+				NES::getInstance()->ram[nOffset++] = (uint8_t)std::stoul(b, nullptr, 16);;
 			}
 
 			// Set Reset Vector
 			NES::getInstance()->ram[0xFFFC] = 0x00;
 			NES::getInstance()->ram[0xFFFD] = 0x80;
-			spdlog::info("Reset Vector set to 0x8000.");
 
 			NES::getInstance()->cpu.reset();
 			spdlog::info("Assembly Hex loaded.");
