@@ -35,12 +35,12 @@ CPU6502::~CPU6502()
 
 uint8_t CPU6502::read(uint16_t addr)
 {
-    return bus->read(addr, false);
+    return bus->cpuRead(addr, false);
 }
 
 void CPU6502::write(uint16_t addr, uint8_t data)
 {
-    bus->write(addr, data);
+    bus->cpuWrite(addr, data);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -965,6 +965,6 @@ uint8_t CPU6502::NOP()
 //illegal opcode
 uint8_t CPU6502::XXX()
 {
-    std::cout << "Illegal opcode" << std::endl;
+    spdlog::error("CPU encountered illegal opcode: {00:X}", opcode);
     return 0;
 }

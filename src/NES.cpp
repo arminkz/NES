@@ -2,7 +2,7 @@
 
 NES::NES() {
     //Clear RAM contents
-    for (uint8_t &i : ram) i = 0x00;
+    for (uint8_t &i : cpuRam) i = 0x00;
 
     //Connect CPU to NES Bus
     cpu.connectBus(this);
@@ -12,18 +12,18 @@ NES::~NES() {
 
 }
 
-void NES::write(uint16_t addr, uint8_t data)
+void NES::cpuWrite(uint16_t addr, uint8_t data)
 {  
     //Write to RAM
-    if (addr >= 0x0000 && addr <= 0xFFFF)
-        ram[addr] = data;
+    if (addr >= 0x0000 && addr <= 0x1FFF)
+        cpuRam[addr & 0x07FF] = data; //mirroring
 }
 
-uint8_t NES::read(uint16_t addr, bool readOnly)
+uint8_t NES::cpuRead(uint16_t addr, bool readOnly)
 {
     //Read from RAM
-    if (addr >= 0x0000 && addr <= 0xFFFF)
-        return ram[addr];
+    if (addr >= 0x0000 && addr <= 0x1FFF)
+        return cpuRam[addr & 0x07FF]; //mirroring
     return 0x00;
 }
 

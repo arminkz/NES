@@ -171,13 +171,13 @@ void GUI::showDeveloperTools()
 		ImGui::NewLine();
 		ImGui::Text("RAM:");
 
-		for (int i = 0; i < 64 * 1024; i++) {
+		for (int i = 0; i < 2048; i++) {
 			if (i % 16 == 0) {
 				//ImGui::NewLine();
 				ImGui::Text("%04X: ", i);
 			}
 			ImGui::SameLine();
-			ImGui::Text("%02X ", NES::getInstance()->ram[i]);
+			ImGui::Text("%02X ", NES::getInstance()->cpuRam[i]);
 		}		
 	}
 	ImGui::End();
@@ -201,23 +201,23 @@ void GUI::showLoadAssembly()
 			spdlog::info("Loading assembly...");
 			spdlog::info("Assembly Hex: {}", _assemblyString);
 
-			std::stringstream ss;
-			ss << _assemblyString;
+			// std::stringstream ss;
+			// ss << _assemblyString;
 
-			uint16_t nOffset = 0x8000;
-			while (!ss.eof())
-			{
-				std::string b;
-				ss >> b;
-				NES::getInstance()->ram[nOffset++] = (uint8_t)std::stoul(b, nullptr, 16);;
-			}
+			// uint16_t nOffset = 0x8000;
+			// while (!ss.eof())
+			// {
+			// 	std::string b;
+			// 	ss >> b;
+			// 	NES::getInstance()->cpuRam[nOffset++] = (uint8_t)std::stoul(b, nullptr, 16);;
+			// }
 
-			// Set Reset Vector
-			NES::getInstance()->ram[0xFFFC] = 0x00;
-			NES::getInstance()->ram[0xFFFD] = 0x80;
+			// // Set Reset Vector
+			// NES::getInstance()->cpuRam[0xFFFC] = 0x00;
+			// NES::getInstance()->cpram[0xFFFD] = 0x80;
 
-			NES::getInstance()->cpu.reset();
-			spdlog::info("Assembly Hex loaded.");
+			// NES::getInstance()->cpu.reset();
+			// spdlog::info("Assembly Hex loaded.");
 		}
 	}
 	ImGui::End();
