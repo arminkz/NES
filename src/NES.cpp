@@ -27,6 +27,18 @@ uint8_t NES::cpuRead(uint16_t addr, bool readOnly)
     return 0x00;
 }
 
+void NES::insertCartridge(const std::shared_ptr<Cartridge> &cartridge)
+{
+    this->cart = cartridge;
+    ppu.connectCartridge(cartridge);
+}
+
+void NES::reset()
+{
+    cpu.reset();
+    nSystemClockCounter = 0;
+}
+
 //////////////////////////////////////////////////////////////////////////
 // [Callbacks (GLFW)]
 

@@ -26,6 +26,7 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/external")
 # Handle .cpp files (cmake recommends manually inputing each filename here) (i cant do that !)
 file(GLOB SOURCES
     src/*
+    src/mappers/*
     src/utilities/*
     src/interface/fonts/*
     src/interface/imgui-impl/*
