@@ -14,29 +14,69 @@ NES::~NES() {
 
 void NES::cpuWrite(uint16_t addr, uint8_t data)
 {  
-    //Write to RAM
-    if (addr >= 0x0000 && addr <= 0x1FFF)
+    if(cart->cpuWrite(addr, data))
+    {
+        //Cartridge has handled the write
+    }
+    else if(addr >= 0x0000 && addr <= 0x1FFF)
+    {
+        //Write to RAM on CPU Bus
         cpuRam[addr & 0x07FF] = data; //mirroring
+    }
+    else if(addr >= 0x2000 && addr <= 0x3FFF)
+    {
+        //Write to PPU Registers
+        //Only 8 registers are addressable
+        ppu.cpuWrite(addr & 0x0007, data);
+    }
 }
 
 uint8_t NES::cpuRead(uint16_t addr, bool readOnly)
 {
-    //Read from RAM
-    if (addr >= 0x0000 && addr <= 0x1FFF)
-        return cpuRam[addr & 0x07FF]; //mirroring
-    return 0x00;
+    uint8_t data = 0x00;
+
+    if(cart->cpuRead(addr, data))
+    {
+        //Cartridge has handled the read
+    }
+    else if(addr >= 0x0000 && addr <= 0x1FFF)
+    {
+        //Read from RAM on CPU Bus
+        data = cpuRam[addr & 0x07FF]; //mirroring
+    }
+    else if(addr >= 0x2000 && addr <= 0x3FFF)
+    {
+        //Read from PPU Registers
+        //Mirror every 8 bytes
+        data = ppu.cpuRead(addr & 0x0007, readOnly);
+    }
+
+    return data;
 }
 
 void NES::insertCartridge(const std::shared_ptr<Cartridge> &cartridge)
 {
     this->cart = cartridge;
-    ppu.connectCartridge(cartridge);
+    //ppu.connectCartridge(cartridge);
 }
 
 void NES::reset()
 {
     cpu.reset();
     nSystemClockCounter = 0;
+}
+
+void NES::clock()
+{
+    // PPU has 3x clock frequency of CPU
+    ppu.clock();
+
+    if (nSystemClockCounter % 3 == 0)
+    {
+        cpu.clock();
+    }
+
+    nSystemClockCounter++;
 }
 
 //////////////////////////////////////////////////////////////////////////

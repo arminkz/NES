@@ -30,6 +30,8 @@ protected:
 
 	void createElements();
 
+	void showGameWindow();
+
 	void showAboutUsWindow();
 
 	void showControls();

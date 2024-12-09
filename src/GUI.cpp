@@ -18,6 +18,7 @@ void GUI::createElements()
 {
 	ImGuiIO& io = ImGui::GetIO();
 
+	showGameWindow();
 	if (_showSettings)          showSettings();
 	if (_showAboutUs)		    showAboutUsWindow();
 	if (_showControls)		    showControls();
@@ -76,6 +77,23 @@ void GUI::renderHelpMarker(const char* message)
 		ImGui::PopTextWrapPos();
 		ImGui::EndTooltip();
 	}
+}
+
+void GUI::showGameWindow()
+{
+	ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+	window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+	window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+	if (ImGui::Begin("Game", NULL, window_flags))
+	{
+		auto ws = ImGui::GetWindowSize();
+		spdlog::info("Rendering game window... Size: {}x{}", ws.x, ws.y);
+		ImGui::Text("Hello, world!");
+	}
+	ImGui::End();
+	ImGui::PopStyleVar(2);
 }
 
 void GUI::showAboutUsWindow()

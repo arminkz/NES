@@ -30,3 +30,8 @@ void PPU2C02::connectCartridge(const std::shared_ptr<Cartridge> &cartridge)
 {
     this->cart = cartridge;
 }
+
+void PPU2C02::clock()
+{
+    
+}
