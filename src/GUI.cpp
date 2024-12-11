@@ -1,5 +1,6 @@
 #include "GUI.h"
 
+#include "Renderer.h"
 #include "NES.h"
 #include "cpu6502.h"
 
@@ -88,10 +89,11 @@ void GUI::showGameWindow()
 	window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 	if (ImGui::Begin("Game", NULL, window_flags))
 	{
-		auto ws = ImGui::GetWindowSize();
-		spdlog::info("Rendering game window... Size: {}x{}", ws.x, ws.y);
-		ImGui::Text("Hello, world!");
-	}
+		const float window_width = ImGui::GetContentRegionAvail().x;
+		const float window_height = ImGui::GetContentRegionAvail().y;
+
+		Renderer::getInstance()->render(window_width, window_height);
+	} 
 	ImGui::End();
 	ImGui::PopStyleVar(2);
 }

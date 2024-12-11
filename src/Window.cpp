@@ -65,7 +65,7 @@ bool Window::initialize(const std::string& title, const uint16_t width, const ui
 	//spdlog::info("Input callbacks are set.");
 
 	// OpenGL environment
-	Renderer::getInstance()->initialize();
+	Renderer::getInstance()->initialize(_window);
 	GUI::getInstance()->initialize(_window, openGL4Version);
 
 	//InputManager::getInstance()->initialize(_window);
@@ -84,7 +84,7 @@ void Window::startRenderingCycle()
 	while (!glfwWindowShouldClose(_window)) {
 		//InputManager::getInstance()->windowRefresh(_window);
 
-		Renderer::getInstance()->render();
+		//Renderer::getInstance()->render();
 		GUI::getInstance()->render();
 
 		glfwSwapBuffers(_window);
