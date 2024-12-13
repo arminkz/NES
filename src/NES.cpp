@@ -1,5 +1,7 @@
 #include "NES.h"
 
+#include "Renderer.h"
+
 NES::NES() {
     //Clear RAM contents
     for (uint8_t &i : cpuRam) i = 0x00;
@@ -119,6 +121,21 @@ void NES::processPressedKeyEvent(const int key, const int mods)
 				cpu.clock();
 			} 
 			while (!cpu.complete());
+            break;
+        case GLFW_KEY_L:
+            //Draw pixels to random colors
+            for (int i = 0; i < Renderer::getInstance()->get_screen_width(); i++)
+            {
+                for (int j = 0; j < Renderer::getInstance()->get_screen_height(); j++)
+                {
+                    Renderer::getInstance()->draw_pixel(i, j, glm::vec3(
+                        (float)rand() / RAND_MAX,
+                        (float)rand() / RAND_MAX,
+                        (float)rand() / RAND_MAX
+                    ));
+                }
+            }
+            break;
     }
     //Do something
 }

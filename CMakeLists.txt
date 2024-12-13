@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 
 project(NES CXX)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
+
 find_package(fmt REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(glfw3 REQUIRED)
@@ -20,6 +22,7 @@ set(LIBRARIES
 
 include_directories(src)
 include_directories("${CMAKE_SOURCE_DIR}/external/imgui")
+include_directories("${CMAKE_SOURCE_DIR}/external/stb")
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/external")
 
