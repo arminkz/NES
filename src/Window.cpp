@@ -65,7 +65,7 @@ bool Window::initialize(const std::string& title, const uint16_t width, const ui
 	//spdlog::info("Input callbacks are set.");
 
 	// OpenGL environment
-	Renderer::getInstance()->initialize(_window, 780, 480, 2, 2);
+	Renderer::getInstance()->initialize(_window, 780, 480, 8, 8);
 	GUI::getInstance()->initialize(_window, openGL4Version);
 
 	//InputManager::getInstance()->initialize(_window);

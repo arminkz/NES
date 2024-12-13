@@ -45,6 +45,8 @@ private:
 
 	void create_triangle();
 
+	void update_triangle(int32_t viewport_w, int32_t viewport_h);
+
 	void add_shader(GLuint program, const char* shader_code, GLenum type);
 
 	void create_shaders();

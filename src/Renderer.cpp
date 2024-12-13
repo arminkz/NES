@@ -30,13 +30,13 @@ void Renderer::initialize(GLFWwindow* window, int32_t screen_w, int32_t screen_h
 	this->pixel_h = pixel_h;
 
 	// Initialize Pixels with black color
-	pixels.resize(screen_w * pixel_w, std::vector<glm::vec3>(screen_h * pixel_h, glm::vec3(0.0f, 0.0f, 0.0f)));
+	pixels.resize(screen_w, std::vector<glm::vec3>(screen_h, glm::vec3(0.0f, 0.0f, 0.0f)));
 
 	// Set pixel values to random colors
 	// Pixels are not 1x1 but pixel_w x pixel_h
-	for (int32_t x = 0; x < screen_w * pixel_w; x+=pixel_w)
+	for (int32_t x = 0; x <= screen_w-pixel_w; x+=pixel_w)
 	{
-		for (int32_t y = 0; y < screen_h * pixel_h; y+=pixel_h)
+		for (int32_t y = 0; y <= screen_h-pixel_h; y+=pixel_h)
 		{
 			auto color = glm::vec3(
 				(float)rand() / RAND_MAX,
@@ -66,6 +66,7 @@ void Renderer::render(uint16_t width, uint16_t height)
 {
 	rescale_framebuffer(width, height);
 	glViewport(0, 0, width, height);
+	update_triangle(width, height);
 
 	refresh_screen();
 
@@ -110,10 +111,39 @@ void Renderer::render(uint16_t width, uint16_t height)
 // 	// glViewport(0, 0, width, height);
 // }
 
+void Renderer::update_triangle(int32_t viewport_w, int32_t viewport_h)
+{
+	float screenAspect = float(screen_w) / float(screen_h);
+	float viewportAspect = float(viewport_w) / float(viewport_h);
+
+	float quadWidth = 1.0f;
+	float quadHeight = 1.0f;
+
+	// Adjust the quad's scale:
+	if (screenAspect > viewportAspect) {
+		quadHeight = viewportAspect / screenAspect;
+	} else {
+		quadWidth = screenAspect / viewportAspect;
+	}
+
+	float vertices[] = {
+		// Positions         // Texture Coords
+		-quadWidth, -quadHeight, 0.0f,  0.0f, 1.0f,  // Bottom-left
+		 quadWidth, -quadHeight, 0.0f,  1.0f, 1.0f,  // Bottom-right
+		 quadWidth,  quadHeight, 0.0f,  1.0f, 0.0f,  // Top-right
+		-quadWidth,  quadHeight, 0.0f,  0.0f, 0.0f   // Top-left
+	};
+
+	glBindVertexArray(VAO); 	        // Bind VAO
+	glBindBuffer(GL_ARRAY_BUFFER, VBO); // Bind VBO
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // Copy vertices to VBO
+	glBindBuffer(GL_ARRAY_BUFFER, 0);   // Unbind VBO
+	glBindVertexArray(0); 	            // Unbind VAO
+}
+
 
 void Renderer::create_triangle()
 {
-
 	float vertices[] = {
     // Positions         // Texture Coords
     -1.0f, -1.0f, 0.0f,  0.0f, 1.0f,  // Bottom-left
@@ -327,7 +357,7 @@ void Renderer::refresh_screen()
     }
 
 	glBindTexture(GL_TEXTURE_2D, in_texture_id);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screen_w * pixel_w, screen_h * pixel_h, 0, GL_RGB, GL_FLOAT, flatArray.data());
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screen_w, screen_h, 0, GL_RGB, GL_FLOAT, flatArray.data());
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
@@ -344,7 +374,9 @@ void Renderer::draw_pixel(int32_t x, int32_t y, glm::vec3 color)
 		{
 			for (int32_t j = 0; j < pixel_h; j++)
 			{
-				pixels[x * pixel_w + i][y * pixel_h + j] = color;
+				// cheeck if the pixel is out of bounds
+				if (x + i > 0 && x + i < screen_w && y + j > 0 && y + j < screen_h)
+					pixels[x + i][y + j] = color;
 			}
 		}
 	}
