@@ -39,7 +39,7 @@ Cartridge::Cartridge(const std::string& fileName)
 
 		if (nFileType == 0)
 		{
-
+			spdlog::error("INES type 0 format not supported yet.");
 		}
 
 		if (nFileType == 1)
@@ -55,7 +55,7 @@ Cartridge::Cartridge(const std::string& fileName)
 
 		if (nFileType == 2)
 		{
-
+			spdlog::error("INES type 2 format not supported yet.");
 		}
 
         // Load appropriate mapper

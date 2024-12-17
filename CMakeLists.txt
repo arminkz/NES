@@ -18,6 +18,7 @@ set(LIBRARIES
     GLEW::GLEW        
     glm::glm
     ImGui
+    nfd
 )
 
 include_directories(src)
@@ -25,6 +26,7 @@ include_directories("${CMAKE_SOURCE_DIR}/external/imgui")
 include_directories("${CMAKE_SOURCE_DIR}/external/stb")
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/external")
+add_subdirectory("${CMAKE_SOURCE_DIR}/external/nativefiledialog-extended")
 
 # Handle .cpp files (cmake recommends manually inputing each filename here) (i cant do that !)
 file(GLOB SOURCES

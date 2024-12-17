@@ -26,7 +26,7 @@ bool Window::initialize(const std::string& title, const uint16_t width, const ui
 		return false;
 	}
 
-	glfwWindowHint(GLFW_SAMPLES, 4);										// Antialiasing
+	//glfwWindowHint(GLFW_SAMPLES, 4);										// Antialiasing
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);			// OpenGL Core Profile 4.5
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, glm::clamp((int)openGL4Version, 1, 6));
@@ -65,7 +65,7 @@ bool Window::initialize(const std::string& title, const uint16_t width, const ui
 	//spdlog::info("Input callbacks are set.");
 
 	// OpenGL environment
-	Renderer::getInstance()->initialize(_window, 780, 480, 8, 8);
+	Renderer::getInstance()->initialize(_window, 390, 240, 1, 1);
 	GUI::getInstance()->initialize(_window, openGL4Version);
 
 	//InputManager::getInstance()->initialize(_window);

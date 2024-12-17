@@ -1,5 +1,7 @@
 #include "GUI.h"
 
+#include <nfd.h>
+
 #include "Renderer.h"
 #include "NES.h"
 #include "cpu6502.h"
@@ -7,6 +9,7 @@
 /// [Protected methods]
 
 GUI::GUI() :
+	_showFileDialog(false),
 	_showSettings(false), 
 	_showAboutUs(false),
 	_showControls(false), 
@@ -20,6 +23,7 @@ void GUI::createElements()
 	ImGuiIO& io = ImGui::GetIO();
 
 	showGameWindow();
+	if (_showFileDialog)		showFileDialog();
 	if (_showSettings)          showSettings();
 	if (_showAboutUs)		    showAboutUsWindow();
 	if (_showControls)		    showControls();
@@ -136,22 +140,33 @@ void GUI::showControls()
 
 void GUI::showFileDialog()
 {
-	// ImGuiFileDialog::Instance()->OpenDialog("Choose Point Cloud", "Choose File", ".ply", ".");
+	spdlog::info("Showing file dialog...");
 
-	// // display
-	// if (ImGuiFileDialog::Instance()->Display("Choose Point Cloud"))
-	// {
-	// 	// action if OK
-	// 	if (ImGuiFileDialog::Instance()->IsOk())
-	// 	{
-	// 		std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
-	// 		Renderer::getInstance()->createSceneFromFile(filePathName);
-	// 	}
+	NFD_Init();
 
-	// 	// close
-	// 	ImGuiFileDialog::Instance()->Close();
-	// 	_showFileDialog = false;
-	// }
+    nfdu8char_t *outPath;
+    nfdu8filteritem_t filters[1] = { { "NES files", "nes" } };
+    nfdopendialogu8args_t args = {0};
+    args.filterList = filters;
+    args.filterCount = 1;
+    nfdresult_t result = NFD_OpenDialogU8_With(&outPath, &args);
+    if (result == NFD_OKAY)
+    {
+		spdlog::info("Success!");
+		spdlog::info("File path: {}", outPath);
+        NFD_FreePathU8(outPath);
+    }
+    else if (result == NFD_CANCEL)
+    {
+		spdlog::info("User pressed cancel.");
+    }
+    else 
+    {
+		spdlog::error("Error: {}", NFD_GetError());
+    }
+
+    NFD_Quit();
+	_showFileDialog = false;
 }
 
 void GUI::showDeveloperTools()

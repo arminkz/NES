@@ -128,10 +128,9 @@ void NES::processPressedKeyEvent(const int key, const int mods)
             {
                 for (int j = 0; j < Renderer::getInstance()->get_screen_height(); j++)
                 {
+                    float brightness = (float)rand() / RAND_MAX;
                     Renderer::getInstance()->draw_pixel(i, j, glm::vec3(
-                        (float)rand() / RAND_MAX,
-                        (float)rand() / RAND_MAX,
-                        (float)rand() / RAND_MAX
+                        brightness, brightness, brightness
                     ));
                 }
             }
