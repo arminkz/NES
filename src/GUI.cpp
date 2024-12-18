@@ -14,7 +14,8 @@ GUI::GUI() :
 	_showAboutUs(false),
 	_showControls(false), 
 	_showDeveloperTools(false),
-	_showLoadAssembly(false)
+	_showLoadAssembly(false),
+	_dev_disassembled(false)
 {
 }
 
@@ -30,6 +31,8 @@ void GUI::createElements()
 	if (_showDeveloperTools)    showDeveloperTools();
 	if (_showLoadAssembly) 	    showLoadAssembly();
 
+	if(_dev_disassembled)		showDisassembledCode();
+
 	if (ImGui::BeginMainMenuBar())
 	{
 		if (ImGui::BeginMenu(ICON_FA_FILE "File"))
@@ -43,6 +46,7 @@ void GUI::createElements()
 		{
 			ImGui::MenuItem(ICON_FA_CODE "Developer Tools", NULL, &_showDeveloperTools);
 			ImGui::MenuItem(ICON_FA_CODE "Load Assembly", NULL, &_showLoadAssembly);
+			ImGui::MenuItem(ICON_FA_CODE "Disassembled Code", NULL, &_dev_disassembled);
 			ImGui::EndMenu();
 		}
 
@@ -152,8 +156,11 @@ void GUI::showFileDialog()
     nfdresult_t result = NFD_OpenDialogU8_With(&outPath, &args);
     if (result == NFD_OKAY)
     {
-		spdlog::info("Success!");
-		spdlog::info("File path: {}", outPath);
+		spdlog::info("Loading NES file : {}", outPath);
+		NES::getInstance()->insertCartridge(std::make_shared<Cartridge>(outPath));
+		NES::getInstance()->mapAsm = NES::getInstance()->cpu.disassemble(0x0000, 0xFFFF);
+		NES::getInstance()->cpu.reset();
+
         NFD_FreePathU8(outPath);
     }
     else if (result == NFD_CANCEL)
@@ -214,6 +221,26 @@ void GUI::showDeveloperTools()
 			ImGui::SameLine();
 			ImGui::Text("%02X ", NES::getInstance()->cpuRam[i]);
 		}		
+	}
+	ImGui::End();
+}
+
+void GUI::showDisassembledCode()
+{
+	if (ImGui::Begin("Disassembled Code", &_dev_disassembled))
+	{
+		ImGui::Text("Disassembly");
+		ImGui::Separator();
+
+		if(NES::getInstance()->mapAsm.empty())
+		{
+			ImGui::Text("No disassembled code available.");
+		}
+
+		for (auto it = NES::getInstance()->mapAsm.begin(); it != NES::getInstance()->mapAsm.end(); it++)
+		{
+			ImGui::Text("%04X: %s", it->first, it->second.c_str());
+		}
 	}
 	ImGui::End();
 }

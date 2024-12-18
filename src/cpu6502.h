@@ -1,9 +1,6 @@
 #pragma once
 
-#include <cstdint>
-#include <string>
-#include <vector>
-#include <iostream>
+#include "stdafx.h"
 
 //#include <NES.h> (circular)
 // Forward declaration to prevent circular inclusions
@@ -95,4 +92,7 @@ public:
     void connectBus(NES* n) { 
         bus = std::unique_ptr<NES>(n);
     }
+
+    //Disassembler
+    std::map<uint16_t, std::string> disassemble(uint16_t nStart, uint16_t nStop);
 };

@@ -25,6 +25,9 @@ Cartridge::Cartridge(const std::string& fileName)
 	{
 		// Read file header
 		ifs.read((char*)&header, sizeof(INESHeader));
+		// Print prg and chr rom chunks
+		spdlog::info("PRG ROM chunks: {}", (int)header.prg_rom_chunks);
+		spdlog::info("CHR ROM chunks: {}", (int)header.chr_rom_chunks);
 
 		// If a "trainer" exists we just need to read past
 		// it before we get to the good stuff
@@ -59,6 +62,7 @@ Cartridge::Cartridge(const std::string& fileName)
 		}
 
         // Load appropriate mapper
+		spdlog::info("Mapper ID: {}", mapperID);
 		switch (mapperID)
 		{
 		case 0: pMapper = std::make_shared<Mapper_000>(nPrgBanks, nChrBanks); break;

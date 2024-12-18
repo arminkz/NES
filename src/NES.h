@@ -22,6 +22,9 @@ public:
     //RAM on CPU bus
     std::array<uint8_t, 2048> cpuRam;
 
+    //Disassembled instructions for debugging
+    std::map<uint16_t, std::string> mapAsm;
+
 public: //CPU Bus Read/Write
     void cpuWrite(uint16_t addr, uint8_t data);
     uint8_t cpuRead(uint16_t addr, bool readOnly = false);
