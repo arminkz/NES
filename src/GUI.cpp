@@ -13,9 +13,9 @@ GUI::GUI() :
 	_showSettings(false), 
 	_showAboutUs(false),
 	_showControls(false), 
-	_showDeveloperTools(false),
+	_showDeveloperTools(true),
 	_showLoadAssembly(false),
-	_dev_disassembled(false)
+	_dev_disassembled(true)
 {
 }
 
@@ -181,12 +181,13 @@ void GUI::showDeveloperTools()
 	if (ImGui::Begin("Developer Tools", &_showDeveloperTools))
 	{
 		ImGui::Text("CPU: ");
-		ImGui::Text("A: %02X   X: %02X   Y: %02X   PC: %04X   SP: %02X", 
+		ImGui::Text("A: %02X   X: %02X   Y: %02X   PC: %04X   SP: %02X  CYC: %3i", 
 		NES::getInstance()->cpu.a, 
 		NES::getInstance()->cpu.x, 
 		NES::getInstance()->cpu.y, 
 		NES::getInstance()->cpu.pc, 
-		NES::getInstance()->cpu.stkp);
+		NES::getInstance()->cpu.stkp,
+		NES::getInstance()->cpu.cycles);
 
 		ImGui::Text("Status: ");
 
@@ -211,6 +212,11 @@ void GUI::showDeveloperTools()
 		print_status_bit(CPU6502::FLAGS6502::N, "N");
 
 		ImGui::NewLine();
+		ImGui::Text("PPU: ");
+		// cycle, scanline, frame
+		ImGui::Text("Cycle: %3i, Scanline: %3i, Frame Complete: %i", NES::getInstance()->ppu.cycle, NES::getInstance()->ppu.scanline, NES::getInstance()->ppu.frameComplete);
+
+		ImGui::NewLine();
 		ImGui::Text("RAM:");
 
 		for (int i = 0; i < 2048; i++) {
@@ -227,6 +233,9 @@ void GUI::showDeveloperTools()
 
 void GUI::showDisassembledCode()
 {
+	// Show Disassembled Code near CPU's PC
+	const int no_of_lines = 20;
+
 	if (ImGui::Begin("Disassembled Code", &_dev_disassembled))
 	{
 		ImGui::Text("Disassembly");
@@ -237,9 +246,44 @@ void GUI::showDisassembledCode()
 			ImGui::Text("No disassembled code available.");
 		}
 
-		for (auto it = NES::getInstance()->mapAsm.begin(); it != NES::getInstance()->mapAsm.end(); it++)
+		// Get iterator to current line of code
+		auto it = NES::getInstance()->mapAsm.find(NES::getInstance()->cpu.pc);
+
+		// Decrease iterator to show previous lines of code
+		if (it != NES::getInstance()->mapAsm.end())
 		{
-			ImGui::Text("%04X: %s", it->first, it->second.c_str());
+			for (int i = 0; i < no_of_lines; i++)
+			{
+				if (it == NES::getInstance()->mapAsm.begin())
+				{
+					break;
+				}
+				it--;
+			}
+		}
+
+		// Show disassembled code
+		
+		for (int i = 0; i < no_of_lines * 2; i++)
+		{
+			if (it == NES::getInstance()->mapAsm.end())
+			{
+				break;
+			}
+
+			// Highlight current line of code with a different color and different background
+			if (it->first == NES::getInstance()->cpu.pc)
+			{
+				ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 0, 255));
+				ImGui::PushStyleColor(ImGuiCol_TextSelectedBg, IM_COL32(0, 0, 255, 255));
+			}
+			ImGui::Text("$%04X: %s", it->first, it->second.c_str());
+			if (it->first == NES::getInstance()->cpu.pc)
+			{
+				ImGui::PopStyleColor();
+				ImGui::PopStyleColor();
+			}
+			it++;
 		}
 	}
 	ImGui::End();

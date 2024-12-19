@@ -107,36 +107,43 @@ void NES::processPressedKeyEvent(const int key, const int mods)
         case GLFW_KEY_R:
             //Reset
             cpu.reset();
-            spdlog::info("Reset called.");
             break;
+
         case GLFW_KEY_C:
-            //Clock CPU
-            cpu.clock();
-            spdlog::info("Clock called.");
+            //Clock NES
+            clock();
             break;
-        case GLFW_KEY_SPACE:
-            //Clock until complete
-            do
-			{
-				cpu.clock();
-			} 
-			while (!cpu.complete());
+
+        case GLFW_KEY_I:
+            //Clock enough times to execute an CPU instruction
+            do { clock(); } while (!cpu.complete());
+            do { clock(); } while (cpu.complete());
             break;
-        case GLFW_KEY_L:
-            //Draw pixels to random colors
-            for (int i = 0; i < Renderer::getInstance()->get_screen_width(); i++)
-            {
-                for (int j = 0; j < Renderer::getInstance()->get_screen_height(); j++)
-                {
-                    float brightness = (float)rand() / RAND_MAX;
-                    Renderer::getInstance()->draw_pixel(i, j, glm::vec3(
-                        brightness, brightness, brightness
-                    ));
-                }
-            }
+
+        case GLFW_KEY_F:
+            //Clock enough times to draw a frame
+            do { clock(); } while (!ppu.frameComplete);
+            //Use residual clocks to complete current cpu instruction
+            do { clock(); } while (!cpu.complete());
+
+            //Reset frame complete flag
+            ppu.frameComplete = false;
             break;
+        
+        // case GLFW_KEY_L:
+        //     //Draw pixels to random colors
+        //     for (int i = 0; i < Renderer::getInstance()->get_screen_width(); i++)
+        //     {
+        //         for (int j = 0; j < Renderer::getInstance()->get_screen_height(); j++)
+        //         {
+        //             float brightness = (float)rand() / RAND_MAX;
+        //             Renderer::getInstance()->draw_pixel(i, j, glm::vec3(
+        //                 brightness, brightness, brightness
+        //             ));
+        //         }
+        //     }
+        //     break;
     }
-    //Do something
 }
 
 void NES::processReleasedKeyEvent(const int key, const int mods)

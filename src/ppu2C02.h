@@ -29,6 +29,13 @@ public:
     void connectCartridge(const std::shared_ptr<Cartridge>& cartridge);
     void clock();
 
+    bool frameComplete = false;
+
+    glm::vec4 palScreen[0x40];
+
+    int16_t scanline = 0;
+    int16_t cycle = 0;
+
 private:
     std::shared_ptr<Cartridge> cart;
 

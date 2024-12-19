@@ -53,8 +53,15 @@ void Renderer::initialize(GLFWwindow* window, int32_t screen_w, int32_t screen_h
 		}
 	}
 
+	// Generate input texture that will be filled by PPU
+	glGenTextures(1, &in_texture_id);
+    glBindTexture(GL_TEXTURE_2D, in_texture_id);
+
+	refresh_screen();
+
 	// Load input texture
 	load_input_texture("C:/Users/Armin/Pictures/nes.png");
+	refresh_screen();
 
 	create_triangle();
 	create_shaders();
@@ -68,7 +75,7 @@ void Renderer::render(uint16_t width, uint16_t height)
 	glViewport(0, 0, width, height);
 	update_triangle(width, height);
 
-	refresh_screen();
+	//refresh_screen();
 
 	ImVec2 pos = ImGui::GetCursorScreenPos();
 		
@@ -319,9 +326,6 @@ void Renderer::rescale_framebuffer(float width, float height)
 
 void Renderer::load_input_texture(const char* filename)
 {
-	glGenTextures(1, &in_texture_id);
-    glBindTexture(GL_TEXTURE_2D, in_texture_id);
-
 	// Set texture parameters
     //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
