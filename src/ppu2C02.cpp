@@ -176,7 +176,4 @@ void PPU2C02::clock()
 			frameComplete = true;
 		}
 	}
-
-	//spdlog::info("Cycle: {0}, Scanline: {1}", cycle, scanline);
-
 }

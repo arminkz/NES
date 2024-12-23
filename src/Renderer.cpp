@@ -16,7 +16,7 @@ Renderer::~Renderer()
 {
 	//TODO: shouldn't do anything if the class is not initialized.
 	glDeleteFramebuffers(1, &FBO);
-	glDeleteTextures(1, &out_texture_id);
+	glDeleteTextures(1, &game_out_tex_id);
 	glDeleteRenderbuffers(1, &RBO);
 }
 
@@ -32,6 +32,8 @@ void Renderer::initialize(GLFWwindow* window, int32_t screen_w, int32_t screen_h
 	// Initialize Pixels with black color
 	pixels.resize(screen_w * screen_h, glm::vec3(0.0f, 0.0f, 0.0f));
 
+	pattern_tbl_pixels.resize(256 * 128, glm::vec3(0.0f, 1.0f, 0.0f));
+
 	for (int32_t x = 0; x < screen_w; x++)
 	{
 		for (int32_t y = 0; y < screen_h; y++)
@@ -46,41 +48,42 @@ void Renderer::initialize(GLFWwindow* window, int32_t screen_w, int32_t screen_h
 	}
 
 	// Generate input texture that will be filled by PPU
-	glGenTextures(1, &in_texture_id);
-    glBindTexture(GL_TEXTURE_2D, in_texture_id);
+	glGenTextures(1, &game_tex_id);
+	glGenTextures(1, &pattern_tbl_tex_id);
 
-	refresh_screen();
+	refresh_game_screen();
+	refresh_pattern_tables_screen();
 
 	create_triangle();
 	create_shaders();
-	create_framebuffer();
+	create_game_framebuffer();
+	create_pattern_tables_framebuffer();
 }
 
 //Used to draw renderables inside one ImGui window
-void Renderer::render(uint16_t width, uint16_t height)
+//TODO: Refactor render_game and render_pattern_tables to use a more generic approach
+void Renderer::render_game(uint16_t width, uint16_t height)
 {
-	rescale_framebuffer(width, height);
+	rescale_game_framebuffer(width, height);
 	glViewport(0, 0, width, height);
-	update_triangle(width, height);
-
-	//refresh_screen();
+	update_triangle(width, height, screen_w, screen_h);
 
 	ImVec2 pos = ImGui::GetCursorScreenPos();
 		
 	ImGui::GetWindowDrawList()->AddImage(
-		(ImTextureID)(intptr_t)out_texture_id, 
+		(ImTextureID)(intptr_t)game_out_tex_id, 
 		ImVec2(pos.x, pos.y),
 		ImVec2(pos.x + width, pos.y + height), 
 		ImVec2(0, 1), 
 		ImVec2(1, 0)
 	);
 
-	bind_framebuffer();
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 		
 	glUseProgram(shader_program);                          // Bind shader program
 
 	glActiveTexture(GL_TEXTURE0);                          // Bind texture
-    glBindTexture(GL_TEXTURE_2D, in_texture_id);
+    glBindTexture(GL_TEXTURE_2D, game_tex_id);
 
 	glBindVertexArray(VAO);                                // Bind VAO
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);                    // Bind VBO
@@ -97,10 +100,51 @@ void Renderer::render(uint16_t width, uint16_t height)
 
 	glUseProgram(0);                                       // Unbind shader program
 		
-	unbind_framebuffer();
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Renderer::update_triangle(int32_t viewport_w, int32_t viewport_h)
+void Renderer::render_pattern_tables(uint16_t width, uint16_t height)
+{
+	rescale_pattern_tables_framebuffer(width, height);
+	glViewport(0, 0, width, height);
+	update_triangle(width, height, 256, 128);
+
+	ImVec2 pos = ImGui::GetCursorScreenPos();
+		
+	ImGui::GetWindowDrawList()->AddImage(
+		(ImTextureID)(intptr_t)pattern_tbl_out_tex_id, 
+		ImVec2(pos.x, pos.y),
+		ImVec2(pos.x + width, pos.y + height), 
+		ImVec2(0, 1), 
+		ImVec2(1, 0)
+	);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, pattern_tbl_FBO);
+		
+	glUseProgram(shader_program);                          // Bind shader program
+
+	glActiveTexture(GL_TEXTURE0);                          // Bind texture
+	glBindTexture(GL_TEXTURE_2D, pattern_tbl_tex_id);
+
+	glBindVertexArray(VAO);                                // Bind VAO
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);                    // Bind VBO
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);            // Bind EBO
+
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);  // Draw Elements
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);              // Unbind EBO
+	glBindBuffer(GL_ARRAY_BUFFER, 0);                      // Unbind VBO
+	glBindVertexArray(0);                                  // Unbind VAO
+
+	glBindTexture(GL_TEXTURE_2D, 0);                       // Unbind texture
+	glDisable( GL_TEXTURE_2D );
+
+	glUseProgram(0);                                       // Unbind shader program
+		
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void Renderer::update_triangle(int32_t viewport_w, int32_t viewport_h, int32_t screen_w, int32_t screen_h)
 {
 	float screenAspect = float(screen_w) / float(screen_h);
 	float viewportAspect = float(viewport_w) / float(viewport_h);
@@ -254,7 +298,7 @@ void Renderer::create_shaders()
 	glUniform1i(glGetUniformLocation(shader_program, "texture1"), 0); // Set texture uniform
 }
 
-void Renderer::create_framebuffer()
+void Renderer::create_game_framebuffer()
 {
 	glGenFramebuffers(1, &FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
@@ -262,12 +306,12 @@ void Renderer::create_framebuffer()
 	uint16_t initial_width = 800;
 	uint16_t initial_height = 600;
 
-	glGenTextures(1, &out_texture_id);
-	glBindTexture(GL_TEXTURE_2D, out_texture_id);
+	glGenTextures(1, &game_out_tex_id);
+	glBindTexture(GL_TEXTURE_2D, game_out_tex_id);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, initial_width, initial_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, out_texture_id, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, game_out_tex_id, 0);
 
 	glGenRenderbuffers(1, &RBO);
 	glBindRenderbuffer(GL_RENDERBUFFER, RBO);
@@ -282,27 +326,58 @@ void Renderer::create_framebuffer()
 	glBindRenderbuffer(GL_RENDERBUFFER, 0); // Unbind RBO
 }
 
-void Renderer::bind_framebuffer()
+void Renderer::rescale_game_framebuffer(float width, float height)
 {
-	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-}
-
-void Renderer::unbind_framebuffer()
-{
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-void Renderer::rescale_framebuffer(float width, float height)
-{
-	glBindTexture(GL_TEXTURE_2D, out_texture_id);
+	glBindTexture(GL_TEXTURE_2D, game_out_tex_id);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, out_texture_id, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, game_out_tex_id, 0);
 
 	glBindRenderbuffer(GL_RENDERBUFFER, RBO);
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
+}
+
+void Renderer::create_pattern_tables_framebuffer()
+{
+	glGenFramebuffers(1, &pattern_tbl_FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, pattern_tbl_FBO);
+
+	uint16_t initial_width = 800;
+	uint16_t initial_height = 600;
+
+	glGenTextures(1, &pattern_tbl_out_tex_id);
+	glBindTexture(GL_TEXTURE_2D, pattern_tbl_out_tex_id);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, initial_width, initial_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pattern_tbl_out_tex_id, 0);
+
+	glGenRenderbuffers(1, &pattern_tbl_RBO);
+	glBindRenderbuffer(GL_RENDERBUFFER, pattern_tbl_RBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, initial_width, initial_height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, pattern_tbl_RBO);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		spdlog::error("[FRAMEBUFFER] Framebuffer is not complete!\n");
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);   // Unbind FBO
+	glBindTexture(GL_TEXTURE_2D, 0);        // Unbind texture
+	glBindRenderbuffer(GL_RENDERBUFFER, 0); // Unbind RBO
+}
+
+void Renderer::rescale_pattern_tables_framebuffer(float width, float height)
+{
+	glBindTexture(GL_TEXTURE_2D, pattern_tbl_out_tex_id);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pattern_tbl_out_tex_id, 0);
+
+	glBindRenderbuffer(GL_RENDERBUFFER, pattern_tbl_RBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, pattern_tbl_RBO);
 }
 
 void Renderer::load_input_texture(const char* filename)
@@ -333,12 +408,22 @@ void Renderer::load_input_texture(const char* filename)
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Renderer::refresh_screen()
+void Renderer::refresh_game_screen()
 {
-	glBindTexture(GL_TEXTURE_2D, in_texture_id);
+	glBindTexture(GL_TEXTURE_2D, game_tex_id);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screen_w, screen_h, 0, GL_RGB, GL_FLOAT, pixels.data());
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void Renderer::refresh_pattern_tables_screen()
+{
+	glBindTexture(GL_TEXTURE_2D, pattern_tbl_tex_id);
+	//Should read pattern tables from PPU
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 128, 0, GL_RGB, GL_FLOAT, pattern_tbl_pixels.data());
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 

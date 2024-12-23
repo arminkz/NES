@@ -113,7 +113,7 @@ void NES::processPressedKeyEvent(const int key, const int mods)
             //Clock NES
             clock();
             //Refresh screen
-            Renderer::getInstance()->refresh_screen();
+            Renderer::getInstance()->refresh_game_screen();
             break;
 
         case GLFW_KEY_I:
@@ -122,19 +122,17 @@ void NES::processPressedKeyEvent(const int key, const int mods)
             do { clock(); } while (cpu.complete());
 
             //Refresh screen
-            Renderer::getInstance()->refresh_screen();
+            Renderer::getInstance()->refresh_game_screen();
             break;
 
         case GLFW_KEY_F:
             //Clock enough times to draw a frame
-            spdlog::info("Drawing frame...");
             do { clock(); } while (!ppu.frameComplete);
             //Use residual clocks to complete current cpu instruction
-            spdlog::info("Completing current CPU instruction...");
             do { clock(); } while (!cpu.complete());
 
             //Refresh screen
-            Renderer::getInstance()->refresh_screen();
+            Renderer::getInstance()->refresh_game_screen();
 
             //Reset frame complete flag
             ppu.frameComplete = false;

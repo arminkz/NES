@@ -12,9 +12,9 @@ public:
 
 private:
     //Devices (Memories) on the PPU Bus
-    uint8_t tblName[2][1024];
-    uint8_t tblPalette[32];
-    uint8_t tblPattern[2][4096];
+    uint8_t tblName[2][1024];    //2x 1KB Name Tables for Layout of Background Tiles
+    uint8_t tblPalette[32];      //32x 8-bit RGB Color Palette
+    uint8_t tblPattern[2][4096]; //2x 4KB Pattern Tables for Sprites and Backgrounds
  
 public:
     //Communications on the CPU Bus

@@ -15,7 +15,9 @@ GUI::GUI() :
 	_showControls(false), 
 	_showDeveloperTools(true),
 	_showLoadAssembly(false),
-	_dev_disassembled(true)
+
+	_dev_disassembled(true),
+	_dev_patternTables(true)
 {
 }
 
@@ -32,6 +34,7 @@ void GUI::createElements()
 	if (_showLoadAssembly) 	    showLoadAssembly();
 
 	if(_dev_disassembled)		showDisassembledCode();
+	if(_dev_patternTables)		showPatternTables();
 
 	if (ImGui::BeginMainMenuBar())
 	{
@@ -45,8 +48,9 @@ void GUI::createElements()
         if (ImGui::BeginMenu(ICON_FA_BINOCULARS "View"))
 		{
 			ImGui::MenuItem(ICON_FA_CODE "Developer Tools", NULL, &_showDeveloperTools);
-			ImGui::MenuItem(ICON_FA_CODE "Load Assembly", NULL, &_showLoadAssembly);
+			//ImGui::MenuItem(ICON_FA_CODE "Load Assembly", NULL, &_showLoadAssembly);
 			ImGui::MenuItem(ICON_FA_CODE "Disassembled Code", NULL, &_dev_disassembled);
+			ImGui::MenuItem(ICON_FA_IMAGE "Pattern Tables", NULL, &_dev_patternTables);
 			ImGui::EndMenu();
 		}
 
@@ -100,10 +104,22 @@ void GUI::showGameWindow()
 		const float window_width = ImGui::GetContentRegionAvail().x;
 		const float window_height = ImGui::GetContentRegionAvail().y;
 
-		Renderer::getInstance()->render(window_width, window_height);
+		Renderer::getInstance()->render_game(window_width, window_height);
 	} 
 	ImGui::End();
 	ImGui::PopStyleVar(2);
+}
+
+void GUI::showPatternTables()
+{
+	if(ImGui::Begin("Pattern Tables", &_dev_patternTables))
+	{
+		const float window_width = ImGui::GetContentRegionAvail().x;
+		const float window_height = ImGui::GetContentRegionAvail().y;
+
+		Renderer::getInstance()->render_pattern_tables(window_width, window_height);
+	}
+	ImGui::End();
 }
 
 void GUI::showAboutUsWindow()
