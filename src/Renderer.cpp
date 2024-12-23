@@ -30,26 +30,18 @@ void Renderer::initialize(GLFWwindow* window, int32_t screen_w, int32_t screen_h
 	this->pixel_h = pixel_h;
 
 	// Initialize Pixels with black color
-	pixels.resize(screen_w, std::vector<glm::vec3>(screen_h, glm::vec3(0.0f, 0.0f, 0.0f)));
+	pixels.resize(screen_w * screen_h, glm::vec3(0.0f, 0.0f, 0.0f));
 
-	// Set pixel values to random colors
-	// Pixels are not 1x1 but pixel_w x pixel_h
-	for (int32_t x = 0; x <= screen_w-pixel_w; x+=pixel_w)
+	for (int32_t x = 0; x < screen_w; x++)
 	{
-		for (int32_t y = 0; y <= screen_h-pixel_h; y+=pixel_h)
+		for (int32_t y = 0; y < screen_h; y++)
 		{
 			auto color = glm::vec3(
 				(float)rand() / RAND_MAX,
 				(float)rand() / RAND_MAX,
 				(float)rand() / RAND_MAX
 			);
-			for (int32_t i = 0; i < pixel_w; i++)
-			{
-				for (int32_t j = 0; j < pixel_h; j++)
-				{
-					pixels[x + i][y + j] = color;
-				}
-			}
+			pixels[x + y * screen_w] = color;
 		}
 	}
 
@@ -57,10 +49,6 @@ void Renderer::initialize(GLFWwindow* window, int32_t screen_w, int32_t screen_h
 	glGenTextures(1, &in_texture_id);
     glBindTexture(GL_TEXTURE_2D, in_texture_id);
 
-	refresh_screen();
-
-	// Load input texture
-	load_input_texture("C:/Users/Armin/Pictures/nes.png");
 	refresh_screen();
 
 	create_triangle();
@@ -112,12 +100,6 @@ void Renderer::render(uint16_t width, uint16_t height)
 	unbind_framebuffer();
 }
 
-// void Renderer::sizeChanged(const uint16_t width, const uint16_t height)
-// {
-// 	// tell opengl
-// 	// glViewport(0, 0, width, height);
-// }
-
 void Renderer::update_triangle(int32_t viewport_w, int32_t viewport_h)
 {
 	float screenAspect = float(screen_w) / float(screen_h);
@@ -147,7 +129,6 @@ void Renderer::update_triangle(int32_t viewport_w, int32_t viewport_h)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);   // Unbind VBO
 	glBindVertexArray(0); 	            // Unbind VAO
 }
-
 
 void Renderer::create_triangle()
 {
@@ -354,14 +335,8 @@ void Renderer::load_input_texture(const char* filename)
 
 void Renderer::refresh_screen()
 {
-	// flatten the 2D vector into a 1D vector
-	std::vector<glm::vec3> flatArray;
-    for (const auto& row : pixels) {
-        flatArray.insert(flatArray.end(), row.begin(), row.end());
-    }
-
 	glBindTexture(GL_TEXTURE_2D, in_texture_id);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screen_w, screen_h, 0, GL_RGB, GL_FLOAT, flatArray.data());
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screen_w, screen_h, 0, GL_RGB, GL_FLOAT, pixels.data());
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -373,17 +348,9 @@ void Renderer::refresh_screen()
 void Renderer::draw_pixel(int32_t x, int32_t y, glm::vec3 color)
 {
 	// Check if the pixel is out of bounds
-	if (x > 0 && x < screen_w && y > 0 && y < screen_h)
+	if (x >= 0 && x < screen_w && y >= 0 && y < screen_h)
 	{
-		// Pixels are not 1x1 but pixel_w x pixel_h
-		for (int32_t i = 0; i < pixel_w; i++)
-		{
-			for (int32_t j = 0; j < pixel_h; j++)
-			{
-				// cheeck if the pixel is out of bounds
-				if (x + i > 0 && x + i < screen_w && y + j > 0 && y + j < screen_h)
-					pixels[x + i][y + j] = color;
-			}
-		}
+		//row major indexing
+		pixels[y*screen_w + x] = color;
 	}
 }

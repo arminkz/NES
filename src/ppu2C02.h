@@ -31,7 +31,7 @@ public:
 
     bool frameComplete = false;
 
-    glm::vec4 palScreen[0x40];
+    glm::vec3 palScreen[0x40]; // Color Palette
 
     int16_t scanline = 0;
     int16_t cycle = 0;

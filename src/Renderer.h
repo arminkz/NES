@@ -30,7 +30,10 @@ private:
 	int32_t pixel_w;
 	int32_t pixel_h;
 
-	std::vector<std::vector<glm::vec3>> pixels;
+	//std::vector<std::vector<glm::vec3>> pixels;
+
+	//use 2d array to store pixel colors
+	std::vector<glm::vec3> pixels;
 
 	GLFWwindow* _window;
 
