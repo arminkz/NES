@@ -23,6 +23,16 @@ private:
     std::shared_ptr<Mapper> pMapper;
 
 public:
+    //Name Table Mirroring
+    enum NTMIRROR
+	{
+		HORIZONTAL,
+		VERTICAL,
+		ONESCREEN_LO,
+		ONESCREEN_HI,
+	} nt_mirror = HORIZONTAL;
+
+public:
     //Communications on the CPU Bus
 	bool cpuRead(uint16_t addr, uint8_t &data);
 	bool cpuWrite(uint16_t addr, uint8_t data);
@@ -30,4 +40,6 @@ public:
 	// Communication with PPU Bus
 	bool ppuRead(uint16_t addr, uint8_t &data);
 	bool ppuWrite(uint16_t addr, uint8_t data);
+
+    void reset();
 };

@@ -2,7 +2,8 @@
 
 #include "Renderer.h"
 
-NES::NES() {
+NES::NES() 
+{
     //Clear RAM contents
     for (uint8_t &i : cpuRam) i = 0x00;
 
@@ -10,7 +11,8 @@ NES::NES() {
     cpu.connectBus(this);
 }
 
-NES::~NES() {
+NES::~NES() 
+{
 
 }
 
@@ -59,12 +61,19 @@ uint8_t NES::cpuRead(uint16_t addr, bool readOnly)
 void NES::insertCartridge(const std::shared_ptr<Cartridge> &cartridge)
 {
     this->cart = cartridge;
-    //ppu.connectCartridge(cartridge);
+    ppu.connectCartridge(cartridge);
+}
+
+bool NES::isCartridgeInserted()
+{
+    return cart != nullptr;
 }
 
 void NES::reset()
 {
     cpu.reset();
+    ppu.reset();
+    if (cart != nullptr) cart->reset();
     nSystemClockCounter = 0;
 }
 
@@ -76,6 +85,12 @@ void NES::clock()
     if (nSystemClockCounter % 3 == 0)
     {
         cpu.clock();
+    }
+
+    if (ppu.signal_nmi)
+    {
+        ppu.signal_nmi = false;
+        cpu.nmi();
     }
 
     nSystemClockCounter++;
@@ -106,7 +121,7 @@ void NES::processPressedKeyEvent(const int key, const int mods)
     switch(key) {
         case GLFW_KEY_R:
             //Reset
-            cpu.reset();
+            reset();
             break;
 
         case GLFW_KEY_C:
@@ -114,6 +129,7 @@ void NES::processPressedKeyEvent(const int key, const int mods)
             clock();
             //Refresh screen
             Renderer::getInstance()->refresh_game_screen();
+            Renderer::getInstance()->refresh_pattern_tables_screen();
             break;
 
         case GLFW_KEY_I:
@@ -123,6 +139,7 @@ void NES::processPressedKeyEvent(const int key, const int mods)
 
             //Refresh screen
             Renderer::getInstance()->refresh_game_screen();
+            Renderer::getInstance()->refresh_pattern_tables_screen();
             break;
 
         case GLFW_KEY_F:
@@ -131,12 +148,27 @@ void NES::processPressedKeyEvent(const int key, const int mods)
             //Use residual clocks to complete current cpu instruction
             do { clock(); } while (!cpu.complete());
 
-            //Refresh screen
-            Renderer::getInstance()->refresh_game_screen();
-
             //Reset frame complete flag
             ppu.frameComplete = false;
+
+            //Refresh screen
+            Renderer::getInstance()->refresh_game_screen();
+            Renderer::getInstance()->refresh_pattern_tables_screen();
             break;
+
+
+        case GLFW_KEY_P:
+            //Change active palette
+            (++dev_active_palette) &= 0x07;
+            //Refresh screen
+            Renderer::getInstance()->refresh_pattern_tables_screen();
+            break;
+
+        case GLFW_KEY_O:
+            NES::getInstance()->ppu.printPalette();
+            break;
+
+
         
         // case GLFW_KEY_L:
         //     //Draw pixels to random colors

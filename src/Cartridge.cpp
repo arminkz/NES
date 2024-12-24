@@ -34,8 +34,9 @@ Cartridge::Cartridge(const std::string& fileName)
 		if (header.mapper1 & 0x04)
 			ifs.seekg(512, std::ios_base::cur);
 
-		// Determine Mapper ID
+		// Determine Mapper ID & Mirroring Type
 		mapperID = ((header.mapper2 >> 4) << 4) | (header.mapper1 >> 4);
+		nt_mirror = (header.mapper1 & 0x01) ? VERTICAL : HORIZONTAL;
 
 		// "Discover" File Format
 		uint8_t nFileType = 1;
@@ -62,6 +63,7 @@ Cartridge::Cartridge(const std::string& fileName)
 		}
 
         // Load appropriate mapper
+		spdlog::info("NT Mirroring: {}", nt_mirror == HORIZONTAL ? "Horizontal" : "Vertical");
 		spdlog::info("Mapper ID: {}", mapperID);
 		switch (mapperID)
 		{
@@ -122,4 +124,8 @@ bool Cartridge::ppuWrite(uint16_t addr, uint8_t data)
 	}
 	else
 		return false;
+}
+
+void Cartridge::reset()
+{
 }

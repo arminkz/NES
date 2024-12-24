@@ -114,6 +114,9 @@ void GUI::showPatternTables()
 {
 	if(ImGui::Begin("Pattern Tables", &_dev_patternTables))
 	{
+		//Show active palette
+		ImGui::Text("Active Palette: %02X", NES::getInstance()->dev_active_palette);
+		
 		const float window_width = ImGui::GetContentRegionAvail().x;
 		const float window_height = ImGui::GetContentRegionAvail().y;
 
@@ -175,7 +178,7 @@ void GUI::showFileDialog()
 		spdlog::info("Loading NES file : {}", outPath);
 		NES::getInstance()->insertCartridge(std::make_shared<Cartridge>(outPath));
 		NES::getInstance()->mapAsm = NES::getInstance()->cpu.disassemble(0x0000, 0xFFFF);
-		NES::getInstance()->cpu.reset();
+		NES::getInstance()->reset();
 
         NFD_FreePathU8(outPath);
     }

@@ -22,7 +22,7 @@ public:
     //RAM on CPU bus
     std::array<uint8_t, 2048> cpuRam;
 
-    //Disassembled instructions for debugging
+    //Disassembled code for debugging
     std::map<uint16_t, std::string> mapAsm;
 
 public: //CPU Bus Read/Write
@@ -31,8 +31,13 @@ public: //CPU Bus Read/Write
 
 public: //System Interface
     void insertCartridge(const std::shared_ptr<Cartridge>& cartridge);
+    bool isCartridgeInserted();
     void reset();
     void clock();
+
+public:
+    // Developer Tools
+    uint8_t dev_active_palette = 0x00;
 
 private:
     uint32_t nSystemClockCounter = 0;

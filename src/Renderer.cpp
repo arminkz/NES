@@ -1,6 +1,7 @@
 #include "Renderer.h"
 
 #include "Window.h"
+#include "NES.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -420,8 +421,28 @@ void Renderer::refresh_game_screen()
 void Renderer::refresh_pattern_tables_screen()
 {
 	glBindTexture(GL_TEXTURE_2D, pattern_tbl_tex_id);
-	//Should read pattern tables from PPU
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 128, 0, GL_RGB, GL_FLOAT, pattern_tbl_pixels.data());
+
+	if(NES::getInstance()->isCartridgeInserted()) {
+		uint8_t palette = NES::getInstance()->dev_active_palette;
+		std::vector<glm::vec3> ptrn1 = NES::getInstance()->ppu.getPatternTable(0, palette); // Get pattern table 0, palette 0
+		std::vector<glm::vec3> ptrn2 = NES::getInstance()->ppu.getPatternTable(1, palette); // Get pattern table 1, palette 0
+
+		std::vector<glm::vec3> ptrn;
+		for (int j = 0; j < 128; j++) { // 128 rows
+			for (int i = 0; i < 256; i++) { // 256 columns
+				if (i < 128)
+					ptrn.push_back(ptrn1[j * 128 + i]);
+				else
+					ptrn.push_back(ptrn2[j * 128 + i - 128]);
+			}
+		}
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 128, 0, GL_RGB, GL_FLOAT, ptrn.data());
+	}
+	else {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 128, 0, GL_RGB, GL_FLOAT, pattern_tbl_pixels.data());
+	}
+
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glBindTexture(GL_TEXTURE_2D, 0);

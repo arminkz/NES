@@ -35,3 +35,6 @@ build/
 out/
 
 CMakeUserPresets.json
+
+roms/*
+!roms/nestest.nes
