@@ -33,6 +33,11 @@ void NES::cpuWrite(uint16_t addr, uint8_t data)
         //Only 8 registers are addressable
         ppu.cpuWrite(addr & 0x0007, data);
     }
+    else if(addr >= 0x4016 && addr <= 0x4017)
+    {
+        //Write to controller means update controller state
+        controller_state[addr & 0x0001] = controller[addr & 0x0001];
+    }
 }
 
 uint8_t NES::cpuRead(uint16_t addr, bool readOnly)
@@ -54,7 +59,12 @@ uint8_t NES::cpuRead(uint16_t addr, bool readOnly)
         //Mirror every 8 bytes
         data = ppu.cpuRead(addr & 0x0007, readOnly);
     }
-
+    else if(addr >= 0x4016 && addr <= 0x4017)
+    {
+        //Read from controller
+        data = (controller_state[addr & 0x0001] & 0x80) > 0;
+		controller_state[addr & 0x0001] <<= 1;
+    }
     return data;
 }
 
@@ -69,20 +79,58 @@ bool NES::isCartridgeInserted()
     return cart != nullptr;
 }
 
+void NES::update()
+{
+    fsec elapsed = Clock::now() - lastSystemTime;
+    lastSystemTime = Clock::now();
+
+    //spdlog::info("Elapsed Time: {}", elapsed.count());
+
+    //Called every GLFW frame
+    if (emulationRun)
+    {
+        if (residualTime > 0)
+        {
+            residualTime -= elapsed.count();
+        }
+        else
+        {
+            residualTime += (1.0f / 60.0f) - elapsed.count();
+            do { clock(); } while (!ppu.frameComplete);
+            ppu.frameComplete = false;
+            Renderer::getInstance()->refresh_game_screen();
+            Renderer::getInstance()->refresh_pattern_tables_screen();
+        }
+    }
+}
+
 void NES::reset()
 {
     cpu.reset();
     ppu.reset();
     if (cart != nullptr) cart->reset();
-    nSystemClockCounter = 0;
+    nesClockCounter = 0;
 }
 
 void NES::clock()
 {
+    // Update controller state (only 1 controller for now)
+    controller[0] = 0x00;
+    controller[0] |= key_state[0] ? 0x80 : 0x00;
+    controller[0] |= key_state[1] ? 0x40 : 0x00;
+    controller[0] |= key_state[2] ? 0x20 : 0x00;
+    controller[0] |= key_state[3] ? 0x10 : 0x00;
+    controller[0] |= key_state[4] ? 0x08 : 0x00;
+    controller[0] |= key_state[5] ? 0x04 : 0x00;
+    controller[0] |= key_state[6] ? 0x02 : 0x00;
+    controller[0] |= key_state[7] ? 0x01 : 0x00;
+
+    controller[1] = 0x00;
+
     // PPU has 3x clock frequency of CPU
     ppu.clock();
 
-    if (nSystemClockCounter % 3 == 0)
+    if (nesClockCounter % 3 == 0)
     {
         cpu.clock();
     }
@@ -93,7 +141,7 @@ void NES::clock()
         cpu.nmi();
     }
 
-    nSystemClockCounter++;
+    nesClockCounter++;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -168,25 +216,84 @@ void NES::processPressedKeyEvent(const int key, const int mods)
             NES::getInstance()->ppu.printPalette();
             break;
 
+        case GLFW_KEY_SPACE:
+            //Toggle emulation run
+            emulationRun = !emulationRun;
+            break;
 
-        
-        // case GLFW_KEY_L:
-        //     //Draw pixels to random colors
-        //     for (int i = 0; i < Renderer::getInstance()->get_screen_width(); i++)
-        //     {
-        //         for (int j = 0; j < Renderer::getInstance()->get_screen_height(); j++)
-        //         {
-        //             float brightness = (float)rand() / RAND_MAX;
-        //             Renderer::getInstance()->draw_pixel(i, j, glm::vec3(
-        //                 brightness, brightness, brightness
-        //             ));
-        //         }
-        //     }
-        //     break;
+        //////////////////////////////////////////
+        // NES Controller Key Mappings
+        case GLFW_KEY_X:
+            key_state[0] = true;
+            break;
+
+        case GLFW_KEY_Z:
+            key_state[1] = true;
+            break;
+
+        case GLFW_KEY_A:
+            key_state[2] = true;
+            break;
+
+        case GLFW_KEY_S:
+            key_state[3] = true;
+            break;
+
+        case GLFW_KEY_UP:
+            key_state[4] = true;
+            break;
+
+        case GLFW_KEY_DOWN:
+            key_state[5] = true;
+            break;
+            
+        case GLFW_KEY_LEFT:
+            key_state[6] = true;
+            break;
+
+        case GLFW_KEY_RIGHT:
+            key_state[7] = true;
+            break;   
     }
 }
 
 void NES::processReleasedKeyEvent(const int key, const int mods)
 {
-    //Do something
+    switch (key)
+    {
+    //////////////////////////////////////////
+    // NES Controller Key Mappings
+
+    case GLFW_KEY_X:
+        key_state[0] = false;
+        break;
+
+    case GLFW_KEY_Z:
+        key_state[1] = false;
+        break;
+
+    case GLFW_KEY_A:
+        key_state[2] = false;
+        break;
+
+    case GLFW_KEY_S:
+        key_state[3] = false;
+        break;
+
+    case GLFW_KEY_UP:
+        key_state[4] = false;
+        break;
+
+    case GLFW_KEY_DOWN:
+        key_state[5] = false;
+        break;
+
+    case GLFW_KEY_LEFT:
+        key_state[6] = false;
+        break;
+
+    case GLFW_KEY_RIGHT:
+        key_state[7] = false;
+        break;
+    }
 }

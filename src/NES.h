@@ -22,28 +22,43 @@ public:
     //RAM on CPU bus
     std::array<uint8_t, 2048> cpuRam;
 
-    //Disassembled code for debugging
-    std::map<uint16_t, std::string> mapAsm;
+    //Controllers
+    uint8_t controller[2];
+
 
 public: //CPU Bus Read/Write
     void cpuWrite(uint16_t addr, uint8_t data);
     uint8_t cpuRead(uint16_t addr, bool readOnly = false);
+
+public:
+    bool emulationRun = false;
+
+    // Developer Tools
+    uint8_t dev_active_palette = 0x00;
+
+    //Disassembled code for debugging
+    std::map<uint16_t, std::string> mapAsm;
 
 public: //System Interface
     void insertCartridge(const std::shared_ptr<Cartridge>& cartridge);
     bool isCartridgeInserted();
     void reset();
     void clock();
-
-public:
-    // Developer Tools
-    uint8_t dev_active_palette = 0x00;
+    void update();
 
 private:
-    uint32_t nSystemClockCounter = 0;
+    uint32_t nesClockCounter = 0;
+    Time lastSystemTime = Clock::now();
+    float residualTime = 0;
+
+    // Internal cache of controller state
+	uint8_t controller_state[2];
 
 private:
     std::shared_ptr<Cartridge> cart;
+
+    // Key states        X      Z      A      S      UP     DOWN   LEFT   RIGHT
+    bool key_state[8] = {false, false, false, false, false, false, false, false};
     
 public:
     // [Callbacks (GLFW)]

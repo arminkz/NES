@@ -39,7 +39,7 @@ bool Window::initialize(const std::string& title, const uint16_t width, const ui
 	}
 
 	glfwMakeContextCurrent(_window);
-	glfwSwapInterval(1);
+	glfwSwapInterval(0); // Disable VSync Because we are handling it manually
 
 	glewExperimental = true;
 	if (glewInit() != GLEW_OK) {
@@ -65,7 +65,7 @@ bool Window::initialize(const std::string& title, const uint16_t width, const ui
 	//spdlog::info("Input callbacks are set.");
 
 	// OpenGL environment
-	Renderer::getInstance()->initialize(_window, 340, 260, 1, 1);
+	Renderer::getInstance()->initialize(_window, 256, 240, 1, 1);
 	GUI::getInstance()->initialize(_window, openGL4Version);
 
 	//InputManager::getInstance()->initialize(_window);
@@ -82,9 +82,8 @@ void Window::startRenderingCycle()
 	//InputManager* inputManager = InputManager::getInstance();
 
 	while (!glfwWindowShouldClose(_window)) {
-		//InputManager::getInstance()->windowRefresh(_window);
 
-		//Renderer::getInstance()->render();
+		NES::getInstance()->update();
 		GUI::getInstance()->render();
 
 		glfwSwapBuffers(_window);

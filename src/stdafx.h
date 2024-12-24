@@ -47,3 +47,7 @@
 #include <unordered_set>
 #include <vector>
 
+// Typedefs
+typedef std::chrono::high_resolution_clock Clock;
+typedef std::chrono::steady_clock::time_point Time;
+typedef std::chrono::duration<float> fsec;
