@@ -110,6 +110,7 @@ uint8_t PPU2C02::cpuRead(uint16_t addr, bool readOnly)
 		case 0x0003: // OAM Address
 			break;
 		case 0x0004: // OAM Data
+			data = pOAM[oam_addr];
 			break;
 		case 0x0005: // Scroll
 			break;
@@ -134,8 +135,10 @@ uint8_t PPU2C02::cpuRead(uint16_t addr, bool readOnly)
 			addr_latch = 0; // Reset Loopy Address latch
 			break;
 		case 0x0003: // OAM Address
+			// Not readable
 			break;
 		case 0x0004: // OAM Data
+			data = pOAM[oam_addr];
 			break;
 		case 0x0005: // Scroll
 			break;
@@ -173,8 +176,10 @@ void PPU2C02::cpuWrite(uint16_t addr, uint8_t data)
 		// Not writable
 		break;
 	case 0x0003: // OAM Address
+		oam_addr = data;
 		break;
 	case 0x0004: // OAM Data
+		pOAM[oam_addr] = data;
 		break;
 	case 0x0005: // Scroll
 		if (addr_latch == 0)
@@ -443,6 +448,22 @@ void PPU2C02::clock()
 			bg_shifter_attrib_lo <<= 1;
 			bg_shifter_attrib_hi <<= 1;
 		}
+
+		if (mask.render_sprites && cycle >= 1 && cycle < 258)
+		{
+			for (uint8_t i = 0; i < scanline_sprite_count; i++)
+			{
+				if (scanline_sprites[i].x > 0)
+				{
+					scanline_sprites[i].x--;
+				}
+				else
+				{
+					sprite_shifter_pattern_lo[i] <<= 1;
+					sprite_shifter_pattern_hi[i] <<= 1;
+				}
+			}
+		}
 	};
 
 	//End of Lambda helper functions//
@@ -460,6 +481,14 @@ void PPU2C02::clock()
 		{
 			// Start of new frame
 			status.vertical_blank = 0;
+			status.sprite_zero_hit = 0;
+			status.sprite_overflow = 0;
+
+			for(int i = 0; i < 8; i++)
+			{
+				sprite_shifter_pattern_lo[i] = 0;
+				sprite_shifter_pattern_hi[i] = 0;
+			}
 		}
 
 		if ((cycle >= 2 && cycle < 258) || (cycle >= 321 && cycle < 338))
@@ -513,6 +542,142 @@ void PPU2C02::clock()
 			// End of vertical blank period
 			transferAddressY();
 		}
+
+		if (cycle == 257 && scanline >= 0)
+		{
+			// Sprite evaluation
+			std::memset(scanline_sprites, 0xFF, 8*sizeof(PPUOAMEntry));
+			scanline_sprite_count = 0;
+
+			//Clear sprite pattern shifters
+			for(int i = 0; i < 8; i++)
+			{
+				sprite_shifter_pattern_lo[i] = 0;
+				sprite_shifter_pattern_hi[i] = 0;
+			}
+
+			uint8_t n = 0;
+			sprite_zero_hit_possible = false;
+			while(n < 64 && scanline_sprite_count < 9)
+			{
+				int16_t diff = (int16_t)scanline - (int16_t)OAM[n].y;
+				if (diff >= 0 && diff < (control.sprite_size ? 16 : 8))
+				{
+					if (scanline_sprite_count < 8)
+					{
+						if (n == 0 ) sprite_zero_hit_possible = true;
+						// Copy OAM entry
+						scanline_sprites[scanline_sprite_count].y = OAM[n].y;
+						scanline_sprites[scanline_sprite_count].id = OAM[n].id;
+						scanline_sprites[scanline_sprite_count].attribute = OAM[n].attribute;
+						scanline_sprites[scanline_sprite_count].x = OAM[n].x;
+						scanline_sprite_count++;
+					}
+				}
+				n++;
+			}
+			status.sprite_overflow = (scanline_sprite_count > 8);
+		}
+
+		if (cycle == 340)
+		{
+			for (uint8_t i=0; i<scanline_sprite_count; i++)
+			{
+				uint8_t sprite_pattern_bits_lo, sprite_pattern_bits_hi;
+				uint16_t sprite_pattern_addr_lo, sprite_pattern_addr_hi;
+
+				if(!control.sprite_size)
+				{
+					// 8x8 sprite mode
+					if (!(scanline_sprites[i].attribute & 0x80))
+					{
+						// Normal
+						sprite_pattern_addr_lo = (
+							(uint16_t)control.pattern_sprite << 12) |  // Sprite pattern table address
+							((uint16_t)scanline_sprites[i].id << 4) |  // Sprite Tile ID * 16
+							(scanline - scanline_sprites[i].y);        // Fine Y offset
+					}
+					else
+					{
+						// Vertically flipped
+						sprite_pattern_addr_lo = (
+							(uint16_t)control.pattern_sprite << 12) | 
+							((uint16_t)scanline_sprites[i].id << 4) | 
+							(7 - (scanline - scanline_sprites[i].y));  // Fine Y is reversed
+					}
+				}
+				else
+				{
+					// 8x16 sprite mode
+					if (!(scanline_sprites[i].attribute & 0x80))
+					{
+						// Normal
+						if (scanline - scanline_sprites[i].y < 8)
+						{
+							// Top half of sprite
+							sprite_pattern_addr_lo = (
+								((scanline_sprites[i].id & 0x01) << 12) |     // Sprite pattern table address
+								((scanline_sprites[i].id & 0xFE) << 4)  |     // Sprite Tile ID * 16
+								((scanline - scanline_sprites[i].y) & 0x07)); // Fine Y offset
+						}
+						else
+						{
+							// Bottom half of sprite
+							sprite_pattern_addr_lo = (
+								((scanline_sprites[i].id & 0x01) << 12) |       // Sprite pattern table address
+								(((scanline_sprites[i].id & 0xFE) + 1) << 4) |  // Sprite Tile ID * 16
+								((scanline - scanline_sprites[i].y) & 0x07));   // Fine Y offset
+						}
+						
+					}
+					else
+					{
+						// Vertically flipped
+						if (scanline - scanline_sprites[i].y < 8)
+						{
+							// Top half of sprite
+							sprite_pattern_addr_lo = (
+								((scanline_sprites[i].id & 0x01) << 12)      |
+								(((scanline_sprites[i].id & 0xFE) + 1) << 4) |
+								(7 - (scanline - scanline_sprites[i].y) & 0x07)); // Fine Y offset is reversed
+						}
+						else
+						{
+							// Bottom half of sprite
+							sprite_pattern_addr_lo = (
+								((scanline_sprites[i].id & 0x01) << 12) |     
+								((scanline_sprites[i].id & 0xFE) << 4)  |     
+								(7 - (scanline - scanline_sprites[i].y) & 0x07)); // Fine Y offset is reversed
+						}
+					}
+				}
+
+				sprite_pattern_addr_hi = sprite_pattern_addr_lo + 8;
+
+				// Fetch the pattern from the pattern table
+				sprite_pattern_bits_lo = ppuRead(sprite_pattern_addr_lo);
+				sprite_pattern_bits_hi = ppuRead(sprite_pattern_addr_hi);
+
+				if (scanline_sprites[i].attribute & 0x40)
+				{
+					// Flip horizontally
+					auto flipbyte = [](uint8_t b) -> uint8_t
+					{
+						b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+						b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+						b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+						return b;
+					};
+
+					sprite_pattern_bits_lo = flipbyte(sprite_pattern_bits_lo);
+					sprite_pattern_bits_hi = flipbyte(sprite_pattern_bits_hi);
+				}
+
+				// Prime the sprite shifter with the pattern data
+				sprite_shifter_pattern_lo[i] = sprite_pattern_bits_lo;
+				sprite_shifter_pattern_hi[i] = sprite_pattern_bits_hi;
+			}	
+		}
 	}
 
 	if (scanline == 240) {
@@ -552,8 +717,90 @@ void PPU2C02::clock()
 		bg_palette = (bg_pal1 << 1) | bg_pal0;
 	}
 
+	uint8_t fg_pixel = 0x00;
+	uint8_t fg_palette = 0x00;
+	uint8_t fg_priority = 0x00;
+
+	if (mask.render_sprites)
+	{
+		sprite_zero_being_rendered = false;
+
+		for (uint8_t i = 0; i < scanline_sprite_count; i++)
+		{
+			if (scanline_sprites[i].x == 0)
+			{
+				
+				uint8_t fg_pixel_lo = (sprite_shifter_pattern_lo[i] & 0x80) > 0;
+				uint8_t fg_pixel_hi = (sprite_shifter_pattern_hi[i] & 0x80) > 0;
+				fg_pixel = (fg_pixel_hi << 1) | fg_pixel_lo;
+
+				fg_palette  = (scanline_sprites[i].attribute & 0x03) + 0x04;
+				fg_priority = (scanline_sprites[i].attribute & 0x20) == 0;
+
+				if (fg_pixel != 0)
+				{
+					if (i==0) sprite_zero_being_rendered = true;
+					break;
+				}
+			}
+		}
+	}
+
+	uint8_t pixel = 0x00;
+	uint8_t palette = 0x00;
+
+	if (bg_pixel == 0 && fg_pixel == 0)
+	{
+		pixel = 0x00;
+		palette = 0x00;
+	}
+	else if (bg_pixel == 0 && fg_pixel > 0)
+	{
+		pixel = fg_pixel;
+		palette = fg_palette;
+	}
+	else if (bg_pixel > 0 && fg_pixel == 0)
+	{
+		pixel = bg_pixel;
+		palette = bg_palette;
+	}
+	else if (bg_pixel > 0 && fg_pixel > 0)
+	{
+		if (fg_priority)
+		{
+			pixel = fg_pixel;
+			palette = fg_palette;
+		}
+		else
+		{
+			pixel = bg_pixel;
+			palette = bg_palette;
+		}
+
+		if (sprite_zero_hit_possible && sprite_zero_being_rendered)
+		{
+			if (mask.render_background && mask.render_sprites)
+			{
+				if (~(mask.render_background_left | mask.render_sprites_left))
+				{
+					if (cycle >= 9 && cycle < 258)
+					{
+						status.sprite_zero_hit = 1;
+					}
+				}
+				else
+				{
+					if (cycle >= 1 && cycle < 258)
+					{
+						status.sprite_zero_hit = 1;
+					}
+				}
+			}
+		}
+	}
+
 	// Draw pixel
-	Renderer::getInstance()->draw_pixel(cycle-1, scanline, getColorFromPalette(bg_palette, bg_pixel));
+	Renderer::getInstance()->draw_pixel(cycle-1, scanline, getColorFromPalette(palette, pixel));
 
     // Advance renderer
 	cycle++;
@@ -594,7 +841,7 @@ std::vector<glm::vec3> PPU2C02::getPatternTable(uint8_t i, uint8_t palette)
 
 				for(uint16_t col = 0; col < 8; col++)
 				{
-					uint8_t pixel = (tile_lsb & 0x01) + (tile_msb & 0x01);
+					uint8_t pixel = ((tile_lsb & 0x01) << 1) | (tile_msb & 0x01);
 					tile_lsb >>= 1;
 					tile_msb >>= 1;
 

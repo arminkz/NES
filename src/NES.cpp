@@ -33,6 +33,13 @@ void NES::cpuWrite(uint16_t addr, uint8_t data)
         //Only 8 registers are addressable
         ppu.cpuWrite(addr & 0x0007, data);
     }
+    else if(addr == 0x4014)
+    {
+        //Activate DMA transfer
+        dma_page = data;
+        dma_addr = 0x00;
+        dma_transfer = true;
+    }
     else if(addr >= 0x4016 && addr <= 0x4017)
     {
         //Write to controller means update controller state
@@ -84,8 +91,6 @@ void NES::update()
     fsec elapsed = Clock::now() - lastSystemTime;
     lastSystemTime = Clock::now();
 
-    //spdlog::info("Elapsed Time: {}", elapsed.count());
-
     //Called every GLFW frame
     if (emulationRun)
     {
@@ -99,7 +104,7 @@ void NES::update()
             do { clock(); } while (!ppu.frameComplete);
             ppu.frameComplete = false;
             Renderer::getInstance()->refresh_game_screen();
-            Renderer::getInstance()->refresh_pattern_tables_screen();
+            Renderer::getInstance()->refresh_pattern_tables_screen(); //TODO: Not necessary if the pattern tables are not being displayed
         }
     }
 }
@@ -132,7 +137,30 @@ void NES::clock()
 
     if (nesClockCounter % 3 == 0)
     {
-        cpu.clock();
+        if(dma_transfer)
+        {
+            if(dma_stall) {
+                if (nesClockCounter % 2 == 1) dma_stall = false; // Wait for syncronization with CPU Clock
+            } else {
+                if (nesClockCounter % 2 == 0) {
+                    //On even cycles, read from CPU Bus
+                    dma_data = cpuRead((uint16_t)(dma_page << 8) | dma_addr);
+                } else {
+                    //On odd cycles, write to PPU OAM
+                    ppu.pOAM[dma_addr] = dma_data;
+                    dma_addr++;
+                    //DMA transfer complete
+                    if(dma_addr == 0x00) {
+                        dma_transfer = false;
+                        dma_stall = true;
+                    }
+                }
+            }
+        }
+        else
+        {
+            cpu.clock();
+        }
     }
 
     if (ppu.signal_nmi)

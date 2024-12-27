@@ -15,6 +15,10 @@ public:
     NES();
     ~NES();
 
+    bool emulationRun = false;
+
+public:
+
     //Devices on the NES
     CPU6502 cpu;
     PPU2C02 ppu;
@@ -22,7 +26,7 @@ public:
     //RAM on CPU bus
     std::array<uint8_t, 2048> cpuRam;
 
-    //Controllers
+    //Controllers on CPU bus
     uint8_t controller[2];
 
 
@@ -30,14 +34,6 @@ public: //CPU Bus Read/Write
     void cpuWrite(uint16_t addr, uint8_t data);
     uint8_t cpuRead(uint16_t addr, bool readOnly = false);
 
-public:
-    bool emulationRun = false;
-
-    // Developer Tools
-    uint8_t dev_active_palette = 0x00;
-
-    //Disassembled code for debugging
-    std::map<uint16_t, std::string> mapAsm;
 
 public: //System Interface
     void insertCartridge(const std::shared_ptr<Cartridge>& cartridge);
@@ -45,6 +41,13 @@ public: //System Interface
     void reset();
     void clock();
     void update();
+
+public:
+    // Developer Tools
+    uint8_t dev_active_palette = 0x00;
+
+    //Disassembled code for debugging
+    std::map<uint16_t, std::string> mapAsm;
 
 private:
     uint32_t nesClockCounter = 0;
@@ -59,6 +62,13 @@ private:
 
     // Key states        X      Z      A      S      UP     DOWN   LEFT   RIGHT
     bool key_state[8] = {false, false, false, false, false, false, false, false};
+
+    // Direct Memory Access (DMA)
+    uint8_t dma_page = 0x00;
+    uint8_t dma_addr = 0x00;
+    uint8_t dma_data = 0x00;
+    bool dma_transfer = false;
+    bool dma_stall = true;
     
 public:
     // [Callbacks (GLFW)]

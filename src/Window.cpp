@@ -39,7 +39,7 @@ bool Window::initialize(const std::string& title, const uint16_t width, const ui
 	}
 
 	glfwMakeContextCurrent(_window);
-	glfwSwapInterval(0); // Disable VSync Because we are handling it manually
+	glfwSwapInterval(0); // Disable GLFW VSync Because we are handling it manually
 
 	glewExperimental = true;
 	if (glewInit() != GLEW_OK) {

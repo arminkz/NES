@@ -17,7 +17,8 @@ GUI::GUI() :
 	_showLoadAssembly(false),
 
 	_dev_disassembled(true),
-	_dev_patternTables(true)
+	_dev_patternTables(true),
+	_dev_oam(true)
 {
 }
 
@@ -35,6 +36,7 @@ void GUI::createElements()
 
 	if(_dev_disassembled)		showDisassembledCode();
 	if(_dev_patternTables)		showPatternTables();
+	if(_dev_oam)				showOAMViewer();
 
 	if (ImGui::BeginMainMenuBar())
 	{
@@ -47,10 +49,11 @@ void GUI::createElements()
 
         if (ImGui::BeginMenu(ICON_FA_BINOCULARS "View"))
 		{
-			ImGui::MenuItem(ICON_FA_CODE "Developer Tools", NULL, &_showDeveloperTools);
+			ImGui::MenuItem(ICON_FA_MICROCHIP "CPU/RAM Inspector", NULL, &_showDeveloperTools);
 			//ImGui::MenuItem(ICON_FA_CODE "Load Assembly", NULL, &_showLoadAssembly);
-			ImGui::MenuItem(ICON_FA_CODE "Disassembled Code", NULL, &_dev_disassembled);
-			ImGui::MenuItem(ICON_FA_IMAGE "Pattern Tables", NULL, &_dev_patternTables);
+			ImGui::MenuItem(ICON_FA_LAPTOP_CODE "Disassembled Code", NULL, &_dev_disassembled);
+			ImGui::MenuItem(ICON_FA_TABLE "Pattern Tables", NULL, &_dev_patternTables);
+			ImGui::MenuItem(ICON_FA_GHOST "Object Attribute Memory (OAM)", NULL, &_dev_oam);
 			ImGui::EndMenu();
 		}
 
@@ -121,6 +124,24 @@ void GUI::showPatternTables()
 		const float window_height = ImGui::GetContentRegionAvail().y;
 
 		Renderer::getInstance()->render_pattern_tables(window_width, window_height);
+	}
+	ImGui::End();
+}
+
+void GUI::showOAMViewer()
+{
+	if(ImGui::Begin("OAM Viewer", &_dev_oam))
+	{
+		//Print OAM memory from PPU
+		for (int i = 0; i < 64; i++)
+		{
+			//Print OAM entries
+			ImGui::Text("[%02d] : (%02d, %02d)    ID: %02X    AT: %02X", i, 
+			NES::getInstance()->ppu.pOAM[i * 4 + 3], 
+			NES::getInstance()->ppu.pOAM[i * 4 + 0],
+			NES::getInstance()->ppu.pOAM[i * 4 + 1],
+			NES::getInstance()->ppu.pOAM[i * 4 + 2]);
+		}
 	}
 	ImGui::End();
 }

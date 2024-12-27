@@ -116,5 +116,26 @@ private:
 	uint16_t bg_shifter_pattern_hi = 0x0000;
 	uint16_t bg_shifter_attrib_lo  = 0x0000;
 	uint16_t bg_shifter_attrib_hi  = 0x0000;
-    
+
+
+    struct PPUOAMEntry {
+        uint8_t y;         // Y Position of the sprite
+        uint8_t id;        // ID of the tile from pattern memory
+        uint8_t attribute; // Flags define how the sprite should be rendered
+        uint8_t x;         // X Position of the sprite
+    } OAM[64]; // 64 sprites maximum - each sprite entry is 4 bytes - total 256 bytes
+
+    uint8_t oam_addr = 0x00; // OAM Address
+
+    PPUOAMEntry scanline_sprites[8]; // Holds the 8 sprites to be rendered on the next scanline
+    uint8_t scanline_sprite_count;   // Number of sprites found for the next scanline
+    uint8_t sprite_shifter_pattern_lo[8]; // Low bit of the sprite pattern
+    uint8_t sprite_shifter_pattern_hi[8]; // High bit of the sprite pattern
+
+    bool sprite_zero_hit_possible = false;   // Flag to indicate if a sprite-zero hit is possible
+    bool sprite_zero_being_rendered = false; // Flag to indicate if the zero sprite is being rendered
+
+public:
+    uint8_t* pOAM = (uint8_t*)OAM; // Pointer to access the OAM byte by byte
+
 };
