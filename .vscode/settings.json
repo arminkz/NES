@@ -90,6 +90,7 @@
         "xtr1common": "cpp",
         "xtree": "cpp",
         "xutility": "cpp",
-        "xstddef": "cpp"
+        "xstddef": "cpp",
+        "coroutine": "cpp"
     }
 }

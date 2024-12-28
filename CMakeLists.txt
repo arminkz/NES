@@ -19,6 +19,8 @@ set(LIBRARIES
     glm::glm
     ImGui
     nfd
+    SDL2-static
+    SDL2_mixer
 )
 
 include_directories(src)
@@ -27,6 +29,8 @@ include_directories("${CMAKE_SOURCE_DIR}/external/stb")
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/external")
 add_subdirectory("${CMAKE_SOURCE_DIR}/external/nativefiledialog-extended")
+add_subdirectory("${CMAKE_SOURCE_DIR}/external/SDL2")
+add_subdirectory("${CMAKE_SOURCE_DIR}/external/SDL_mixer")
 
 # Handle .cpp files (cmake recommends manually inputing each filename here) (i cant do that !)
 file(GLOB SOURCES

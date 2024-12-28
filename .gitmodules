@@ -8,3 +8,11 @@
 [submodule "external/nativefiledialog-extended"]
 	path = external/nativefiledialog-extended
 	url = https://github.com/btzy/nativefiledialog-extended.git
+[submodule "external/SDL_mixer"]
+	path = external/SDL_mixer
+	url = https://github.com/libsdl-org/SDL_mixer.git
+	branch = SDL2
+[submodule "external/SDL2"]
+	path = external/SDL2
+	url = https://github.com/libsdl-org/SDL.git
+	branch = SDL2
