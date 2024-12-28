@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 	spdlog::info("NES Emulator v0.1 - by Armin Kazemi @arminkz");
 
 	const std::string title = "NES Emulator v0.1"; 
-	const uint16_t width = 1550, height = 650;
+	const uint16_t width = 1550, height = 850;
 	const auto window = Window::getInstance();
 	
 	if (const bool success = window->initialize(title, width, height))

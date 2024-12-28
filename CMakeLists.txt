@@ -32,6 +32,12 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/external/nativefiledialog-extended")
 add_subdirectory("${CMAKE_SOURCE_DIR}/external/SDL2")
 add_subdirectory("${CMAKE_SOURCE_DIR}/external/SDL_mixer")
 
+set(BUILD_SHARED_LIBS OFF)
+set(SDL2MIXER_WAVPACK OFF)
+set(SDL2MIXER_OPUS OFF)
+set(SDL2MIXER_MOD OFF)
+set(SDL2MIXER_MIDI OFF)
+
 # Handle .cpp files (cmake recommends manually inputing each filename here) (i cant do that !)
 file(GLOB SOURCES
     src/*
