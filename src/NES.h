@@ -18,18 +18,30 @@ public:
 
     bool emulationRun = false;
 
+//CPU
 public:
-
-    //Devices on the NES
     CPU6502 cpu;
+
+//PPU
+public:
     PPU2C02 ppu;
     
-    //RAM on CPU bus
+//RAM
+public:
     std::array<uint8_t, 2048> cpuRam;
 
-    //Controllers on CPU bus
-    uint8_t controller[2];
+//CPU Bus
+public:
+    uint8_t cpuRead(uint16_t addr, bool readOnly = false);
+    void cpuWrite(uint16_t addr, uint8_t data);
 
+// Direct Memory Access (DMA)
+private:
+    uint8_t dma_page = 0x00;
+    uint8_t dma_addr = 0x00;
+    uint8_t dma_data = 0x00;
+    bool dma_transfer = false;
+    bool dma_stall = true;
 
 //Audio
 public:
@@ -42,19 +54,27 @@ private:
     double audioTimePerSample = 0.0;
     double audioTimePerNESClock = 0.0;
 
+//Controllers
+public:
+    uint8_t controller[2];
+private:
+    uint8_t controller_state[2]; // Internal cache of controller state
 
-public: //CPU Bus Read/Write
-    void cpuWrite(uint16_t addr, uint8_t data);
-    uint8_t cpuRead(uint16_t addr, bool readOnly = false);
-
-public: //System Interface
+//Cartridge (GamePak)
+public: 
     void insertCartridge(const std::shared_ptr<Cartridge>& cartridge);
     bool isCartridgeInserted();
+private:
+    std::shared_ptr<Cartridge> cart;
+
+
+
+//System Interface
+public:
     void reset();
     bool clock();
     void update();
     void updateWithAudio();
-
 
 
 public:
@@ -69,22 +89,11 @@ private:
     Time lastSystemTime = Clock::now();
     float residualTime = 0;
 
-    // Internal cache of controller state
-	uint8_t controller_state[2];
-
-private:
-    std::shared_ptr<Cartridge> cart;
 
     // Key states        X      Z      A      S      UP     DOWN   LEFT   RIGHT
     bool key_state[8] = {false, false, false, false, false, false, false, false};
 
-    // Direct Memory Access (DMA)
-    uint8_t dma_page = 0x00;
-    uint8_t dma_addr = 0x00;
-    uint8_t dma_data = 0x00;
-    bool dma_transfer = false;
-    bool dma_stall = true;
-    
+
 public:
     // [Callbacks (GLFW)]
 	static void keyEvent(GLFWwindow* window, int key, int scancode, int action, int mods);

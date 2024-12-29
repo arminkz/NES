@@ -8,34 +8,6 @@
 #include "SoundEngine.h"
 
 
-static std::atomic<float> fFrequency = 440.0f;
-static std::atomic<float> fDutyCycle = 0.5f;
-static std::atomic<float> fHarmonics = 20.0f;
-
-
-// static float sampleSquareWave(float freq, float time)
-// {
-// 	float a = 0.0f;
-// 	float b = 0.0f;
-// 	float pwm = fDutyCycle * 2.0f * 3.14159f;
-
-// 	for (int n = 1; n < fHarmonics; n++)
-// 	{
-// 		float w = n * freq * 2.0f * 3.14159f * time;
-// 		a += sin(w) / n;
-// 		b += sin(w - pwm*n) / n;
-// 	}
-
-// 	return (a - b) * (2.0f / 3.14159f);
-// }
-
-// static float makeNoise(double dTime)
-// {
-// 	//return 0.2 * sin(2 * 3.14159 * 880 * dTime);
-// 	return 0.3 * sampleSquareWave(fFrequency, dTime);
-// }
-
-
 Window::Window() : Singleton(), _size(glm::ivec2(1,1)), _window(nullptr), _windowState(NOT_LOADED)
 {
 }
@@ -67,7 +39,7 @@ bool Window::initialize(const std::string& title, const uint16_t width, const ui
 	}
 
 	glfwMakeContextCurrent(_window);
-	glfwSwapInterval(0); // Disable GLFW VSync Because we are handling it manually
+	glfwSwapInterval(1); // Disable GLFW VSync Because we are handling it manually
 
 	glewExperimental = true;
 	if (glewInit() != GLEW_OK) {

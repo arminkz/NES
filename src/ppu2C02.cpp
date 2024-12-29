@@ -234,7 +234,7 @@ uint8_t PPU2C02::ppuRead(uint16_t addr, bool readOnly)
 		//Nametables
 		addr &= 0x0FFF;
 
-		if(cart != nullptr && cart->nt_mirror == Cartridge::VERTICAL)
+		if(cart != nullptr && cart->getMirroringMode() == NTMIRROR::VERTICAL)
 		{
 			// Vertical
 			if (addr >= 0x0000 && addr <= 0x03FF)
@@ -246,7 +246,7 @@ uint8_t PPU2C02::ppuRead(uint16_t addr, bool readOnly)
 			if (addr >= 0x0C00 && addr <= 0x0FFF)
 				data = tblName[1][addr & 0x03FF];
 		}
-		else if(cart != nullptr && cart->nt_mirror == Cartridge::HORIZONTAL)
+		else if(cart != nullptr && cart->getMirroringMode() == NTMIRROR::HORIZONTAL)
 		{
 			// Horizontal
 			if (addr >= 0x0000 && addr <= 0x03FF)
@@ -290,7 +290,7 @@ void PPU2C02::ppuWrite(uint16_t addr, uint8_t data)
 	{
 		//Nametables
 		addr &= 0x0FFF;
-		if(cart != nullptr && cart->nt_mirror == Cartridge::VERTICAL)
+		if(cart != nullptr && cart->getMirroringMode() == NTMIRROR::VERTICAL)
 		{
 			// Vertical
 			if (addr >= 0x0000 && addr <= 0x03FF)
@@ -302,7 +302,7 @@ void PPU2C02::ppuWrite(uint16_t addr, uint8_t data)
 			if (addr >= 0x0C00 && addr <= 0x0FFF)
 				tblName[1][addr & 0x03FF] = data;
 		}
-		else if(cart != nullptr && cart->nt_mirror == Cartridge::HORIZONTAL)
+		else if(cart != nullptr && cart->getMirroringMode() == NTMIRROR::HORIZONTAL)
 		{
 			// Horizontal
 			if (addr >= 0x0000 && addr <= 0x03FF)

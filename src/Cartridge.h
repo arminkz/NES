@@ -21,16 +21,7 @@ private:
     uint8_t nChrBanks = 0;
 
     std::shared_ptr<Mapper> pMapper;
-
-public:
-    //Name Table Mirroring
-    enum NTMIRROR
-	{
-		HORIZONTAL,
-		VERTICAL,
-		ONESCREEN_LO,
-		ONESCREEN_HI,
-	} nt_mirror = HORIZONTAL;
+    NTMIRROR hw_mirror = HORIZONTAL;  //Used when mirroring is done by soldering lines on the board
 
 public:
     //Communications on the CPU Bus
@@ -42,4 +33,7 @@ public:
 	bool ppuWrite(uint16_t addr, uint8_t data);
 
     void reset();
+
+    NTMIRROR getMirroringMode();
+    std::shared_ptr<Mapper> getMapper() { return pMapper; }
 };

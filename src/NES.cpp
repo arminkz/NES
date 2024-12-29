@@ -122,10 +122,16 @@ void NES::update()
 
 void NES::reset()
 {
+    if (cart != nullptr) cart->reset();
     cpu.reset();
     ppu.reset();
-    if (cart != nullptr) cart->reset();
     nesClockCounter = 0;
+    
+    dma_page = 0x00;
+    dma_addr = 0x00;
+    dma_data = 0x00;
+    dma_stall = true;
+    dma_transfer = false;
 }
 
 bool NES::clock()
@@ -213,7 +219,7 @@ float NES::soundOut(double dTime)
     return static_cast<float>(NES::getInstance()->currAudioSample);
 }   
 
-void  NES::setAudioSampleRate(uint32_t nSampleRate)
+void NES::setAudioSampleRate(uint32_t nSampleRate)
 {
     audioTimePerSample = 1.0 / (double)nSampleRate;
     audioTimePerNESClock = 1.0 / 5369318.0; //PPU Clock Rate

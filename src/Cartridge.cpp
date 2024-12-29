@@ -25,9 +25,6 @@ Cartridge::Cartridge(const std::string& fileName)
 	{
 		// Read file header
 		ifs.read((char*)&header, sizeof(INESHeader));
-		// Print prg and chr rom chunks
-		spdlog::info("PRG ROM chunks: {}", (int)header.prg_rom_chunks);
-		spdlog::info("CHR ROM chunks: {}", (int)header.chr_rom_chunks);
 
 		// If a "trainer" exists we just need to read past
 		// it before we get to the good stuff
@@ -36,35 +33,58 @@ Cartridge::Cartridge(const std::string& fileName)
 
 		// Determine Mapper ID & Mirroring Type
 		mapperID = ((header.mapper2 >> 4) << 4) | (header.mapper1 >> 4);
-		nt_mirror = (header.mapper1 & 0x01) ? VERTICAL : HORIZONTAL;
+		hw_mirror = (header.mapper1 & 0x01) ? VERTICAL : HORIZONTAL;
 
 		// "Discover" File Format
 		uint8_t nFileType = 1;
+		if ((header.mapper2 & 0x0C) == 0x08) nFileType = 2;
 
 		if (nFileType == 0)
 		{
+			spdlog::info("File format: iNES type 0");
 			spdlog::error("INES type 0 format not supported yet.");
 		}
 
 		if (nFileType == 1)
 		{
+			spdlog::info("File format: iNES type 1");
 			nPrgBanks = header.prg_rom_chunks;
 			prgMemory.resize(nPrgBanks * 16384); // 16 KB per bank
 			ifs.read((char*)prgMemory.data(), prgMemory.size());
 
 			nChrBanks = header.chr_rom_chunks;
-			chrMemory.resize(nChrBanks * 8192);  // 8 KB per bank
+			if (nChrBanks == 0)
+			{
+				// Create CHR RAM
+				chrMemory.resize(8192);
+			}
+			else
+			{
+				// Create CHR ROM
+				chrMemory.resize(nChrBanks * 8192);  // 8 KB per bank
+			}
 			ifs.read((char*)chrMemory.data(), chrMemory.size());
 		}
 
 		if (nFileType == 2)
 		{
-			spdlog::error("INES type 2 format not supported yet.");
-		}
+			spdlog::info("File format: iNES type 2");
+			nPrgBanks = ((header.prg_ram_size & 0x07) << 8) | header.prg_rom_chunks;
+			prgMemory.resize(nPrgBanks * 16384);
+			ifs.read((char*)prgMemory.data(), prgMemory.size());
 
-        // Load appropriate mapper
-		spdlog::info("NT Mirroring: {}", nt_mirror == HORIZONTAL ? "Horizontal" : "Vertical");
+			nChrBanks = ((header.prg_ram_size & 0x38) << 8) | header.chr_rom_chunks;
+			chrMemory.resize(nChrBanks * 8192);
+			ifs.read((char*)chrMemory.data(), chrMemory.size());
+		}
+        
+		// Print prg and chr rom chunks
+		spdlog::info("PRG ROM chunks: {}", (int)header.prg_rom_chunks);
+		spdlog::info("CHR ROM chunks: {}", (int)header.chr_rom_chunks);
 		spdlog::info("Mapper ID: {}", mapperID);
+		spdlog::info("Hardware NT Mirroring: {}", hw_mirror == HORIZONTAL ? "Horizontal" : "Vertical");
+
+		// Load appropriate mapper
 		switch (mapperID)
 		{
 		case 0: pMapper = std::make_shared<Mapper_000>(nPrgBanks, nChrBanks); break;
@@ -81,8 +101,11 @@ Cartridge::~Cartridge()
 bool Cartridge::cpuRead(uint16_t addr, uint8_t &data)
 {
 	uint32_t mapped_addr = 0;
-	if (pMapper->cpuMapRead(addr, mapped_addr))
+	if (pMapper->cpuMapRead(addr, mapped_addr, data))
 	{
+		if (mapped_addr == 0xFFFFFFFF) // Mapper has set the data value
+			return true;
+		
 		data = prgMemory[mapped_addr];
 		return true;
 	}
@@ -93,8 +116,11 @@ bool Cartridge::cpuRead(uint16_t addr, uint8_t &data)
 bool Cartridge::cpuWrite(uint16_t addr, uint8_t data)
 {
 	uint32_t mapped_addr = 0;
-	if (pMapper->cpuMapWrite(addr, mapped_addr))
+	if (pMapper->cpuMapWrite(addr, mapped_addr, data))
 	{
+		if (mapped_addr == 0xFFFFFFFF) // Mapper has set the data value
+			return true;
+		
 		prgMemory[mapped_addr] = data;
 		return true;
 	}
@@ -128,4 +154,12 @@ bool Cartridge::ppuWrite(uint16_t addr, uint8_t data)
 
 void Cartridge::reset()
 {
+	if (pMapper != nullptr)
+		pMapper->reset();
+}
+
+NTMIRROR Cartridge::getMirroringMode()
+{
+	NTMIRROR mapper_mirror = pMapper->getMirroringMode();
+	return mapper_mirror == HARDWARE ? hw_mirror : mapper_mirror;
 }
