@@ -200,6 +200,7 @@ void GUI::showFileDialog()
 		NES::getInstance()->insertCartridge(std::make_shared<Cartridge>(outPath));
 		NES::getInstance()->mapAsm = NES::getInstance()->cpu.disassemble(0x0000, 0xFFFF);
 		NES::getInstance()->reset();
+		NES::getInstance()->emulationRun = true;
 
         NFD_FreePathU8(outPath);
     }

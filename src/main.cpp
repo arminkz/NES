@@ -15,6 +15,7 @@ int main(int argc, char* argv[])
 
 	const std::string title = "NES Emulator v0.1"; 
 	const uint16_t width = 1550, height = 850;
+
 	const auto window = Window::getInstance();
 	
 	if (const bool success = window->initialize(title, width, height))

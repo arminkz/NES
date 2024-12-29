@@ -6,6 +6,7 @@
 
 #include "cpu6502.h"
 #include "ppu2C02.h"
+#include "APU2A03.h"
 #include "Cartridge.h"
 
 class NES : public Singleton<NES>{
@@ -30,17 +31,31 @@ public:
     uint8_t controller[2];
 
 
+//Audio
+public:
+    APU2A03 apu;
+    double currAudioSample = 0.0;                  // Current Audio Sample
+    static float soundOut(double dTime);           // Called by SoundEngine to get audio sample
+    void setAudioSampleRate(uint32_t nSampleRate); // Must be called to syncronize with audio sample rate
+private:
+    double audioTime = 0.0;
+    double audioTimePerSample = 0.0;
+    double audioTimePerNESClock = 0.0;
+
+
 public: //CPU Bus Read/Write
     void cpuWrite(uint16_t addr, uint8_t data);
     uint8_t cpuRead(uint16_t addr, bool readOnly = false);
-
 
 public: //System Interface
     void insertCartridge(const std::shared_ptr<Cartridge>& cartridge);
     bool isCartridgeInserted();
     void reset();
-    void clock();
+    bool clock();
     void update();
+    void updateWithAudio();
+
+
 
 public:
     // Developer Tools

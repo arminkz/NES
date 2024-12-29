@@ -2,10 +2,38 @@
 
 #include "stdafx.h"
 
-
 #include "GUI.h"
 #include "NES.h"
 #include "Renderer.h"
+#include "SoundEngine.h"
+
+
+static std::atomic<float> fFrequency = 440.0f;
+static std::atomic<float> fDutyCycle = 0.5f;
+static std::atomic<float> fHarmonics = 20.0f;
+
+
+// static float sampleSquareWave(float freq, float time)
+// {
+// 	float a = 0.0f;
+// 	float b = 0.0f;
+// 	float pwm = fDutyCycle * 2.0f * 3.14159f;
+
+// 	for (int n = 1; n < fHarmonics; n++)
+// 	{
+// 		float w = n * freq * 2.0f * 3.14159f * time;
+// 		a += sin(w) / n;
+// 		b += sin(w - pwm*n) / n;
+// 	}
+
+// 	return (a - b) * (2.0f / 3.14159f);
+// }
+
+// static float makeNoise(double dTime)
+// {
+// 	//return 0.2 * sin(2 * 3.14159 * 880 * dTime);
+// 	return 0.3 * sampleSquareWave(fFrequency, dTime);
+// }
 
 
 Window::Window() : Singleton(), _size(glm::ivec2(1,1)), _window(nullptr), _windowState(NOT_LOADED)
@@ -68,7 +96,14 @@ bool Window::initialize(const std::string& title, const uint16_t width, const ui
 	Renderer::getInstance()->initialize(_window, 256, 240, 1, 1);
 	GUI::getInstance()->initialize(_window, openGL4Version);
 
-	//InputManager::getInstance()->initialize(_window);
+	// //Initialize Sound Engine
+	SoundEngine::getInstance()->initialize();
+	SoundEngine::getInstance()->setOutputVolume(0.1f);
+	SoundEngine::getInstance()->setNewSampleCallback(NES::soundOut);
+	NES::getInstance()->setAudioSampleRate(SoundEngine::getInstance()->getSampleRate());
+	SoundEngine::getInstance()->start();
+
+	spdlog::info("Window initialized successfully.");
 
 	_windowState = SUCCESSFUL_LOAD;
 
@@ -83,7 +118,7 @@ void Window::startRenderingCycle()
 
 	while (!glfwWindowShouldClose(_window)) {
 
-		NES::getInstance()->update();
+		NES::getInstance()->updateWithAudio();
 		GUI::getInstance()->render();
 
 		glfwSwapBuffers(_window);
@@ -91,6 +126,7 @@ void Window::startRenderingCycle()
 	}
 
 	spdlog::info("Terminating GLFW window...");
+	SoundEngine::getInstance()->destroy();
 	glfwDestroyWindow(_window);
 	glfwTerminate();
 }

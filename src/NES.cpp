@@ -33,6 +33,11 @@ void NES::cpuWrite(uint16_t addr, uint8_t data)
         //Only 8 registers are addressable
         ppu.cpuWrite(addr & 0x0007, data);
     }
+    else if((addr >= 0x4000 && addr <= 0x4013) || addr == 0x4015 || addr == 0x4017)
+    {
+        //Write to APU
+        apu.cpuWrite(addr, data);
+    }
     else if(addr == 0x4014)
     {
         //Activate DMA transfer
@@ -86,6 +91,12 @@ bool NES::isCartridgeInserted()
     return cart != nullptr;
 }
 
+void NES::updateWithAudio()
+{
+    Renderer::getInstance()->refresh_game_screen();
+    Renderer::getInstance()->refresh_pattern_tables_screen();
+}
+
 void NES::update()
 {
     fsec elapsed = Clock::now() - lastSystemTime;
@@ -117,8 +128,11 @@ void NES::reset()
     nesClockCounter = 0;
 }
 
-void NES::clock()
+bool NES::clock()
 {
+    // Dont do anything if Emulation is paused
+    if (emulationRun == false) return true;
+
     // Update controller state (only 1 controller for now)
     controller[0] = 0x00;
     controller[0] |= key_state[0] ? 0x80 : 0x00;
@@ -132,9 +146,13 @@ void NES::clock()
 
     controller[1] = 0x00;
 
-    // PPU has 3x clock frequency of CPU
+    // PPU Clock
     ppu.clock();
 
+    // APU Clock
+    apu.clock();
+
+    // CPU clock (1/3 * System Clock)
     if (nesClockCounter % 3 == 0)
     {
         if(dma_transfer)
@@ -163,13 +181,42 @@ void NES::clock()
         }
     }
 
+    //Syncronize with Audio
+    //Determines if an audio sample is ready to be output
+    bool audioSampleReady = false;
+    audioTime += audioTimePerNESClock;
+    if (audioTime >= audioTimePerSample)
+    {
+        audioTime -= audioTimePerSample;
+        currAudioSample = apu.getOutputSample();
+        audioSampleReady = true;
+    }
+
+    // Check if PPU has signaled an NMI
     if (ppu.signal_nmi)
     {
         ppu.signal_nmi = false;
         cpu.nmi();
     }
 
+    // Advance counter;;;
     nesClockCounter++;
+
+    return audioSampleReady;
+}
+
+float NES::soundOut(double dTime)
+{
+    // Syncronizing to the Audio
+    // Do enough clocking to match the audio sample rate
+    while(!NES::getInstance()->clock()) {};
+    return static_cast<float>(NES::getInstance()->currAudioSample);
+}   
+
+void  NES::setAudioSampleRate(uint32_t nSampleRate)
+{
+    audioTimePerSample = 1.0 / (double)nSampleRate;
+    audioTimePerNESClock = 1.0 / 5369318.0; //PPU Clock Rate
 }
 
 //////////////////////////////////////////////////////////////////////////
