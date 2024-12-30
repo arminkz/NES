@@ -80,6 +80,7 @@ public:
 public:
     // Developer Tools
     uint8_t dev_active_palette = 0x00;
+    Time lastAudioTime = Clock::now();
 
     //Disassembled code for debugging
     std::map<uint16_t, std::string> mapAsm;
@@ -89,6 +90,7 @@ private:
     Time lastSystemTime = Clock::now();
     float residualTime = 0;
 
+    
 
     // Key states        X      Z      A      S      UP     DOWN   LEFT   RIGHT
     bool key_state[8] = {false, false, false, false, false, false, false, false};

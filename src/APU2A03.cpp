@@ -207,6 +207,7 @@ void APU2A03::clock()
 
         // Pulse 1
         pulse1_seq.clock(pulse1_enable, [](uint32_t &s) {
+            // Shift right by 1 bit, wrapping around
             s = ((s & 0x0001) << 7) | ((s & 0x00FE) >> 1);
         });
 
@@ -269,15 +270,37 @@ void APU2A03::reset()
 
 double APU2A03::getOutputSample()
 {
-    if (useRawOutput)
-	{
-		return (pulse1_sample - 0.5) * 0.5
-			+ (pulse2_sample - 0.5) * 0.5;
-	}
-	else
-	{
-		return ((1.0 * pulse1_output) - 0.8) * 0.1 +
-			((1.0 * pulse2_output) - 0.8) * 0.1 +
-			((2.0 * (noise_output - 0.5))) * 0.1;
-	}
+    double master_output = 0.0;
+
+    if (pulse1_output != 0.0)
+    {
+        master_output += ((1.0 * pulse1_output) - 0.8) * 0.1;
+    }
+
+    if (pulse2_output != 0.0)
+    {
+        master_output += ((1.0 * pulse2_output) - 0.8) * 0.1;
+    }
+
+    if (noise_output != 0.0)
+    {
+        master_output += ((2.0 * (noise_output - 0.5))) * 0.1;
+    }
+
+    return master_output;
+
+//     if (useRawOutput)
+// 	{
+// 		return (pulse1_sample - 0.5) * 0.5
+// 			+ (pulse2_sample - 0.5) * 0.5;
+// 	}
+// 	else
+// 	{
+//         return (pulse1_output - 0.5) * 0.5
+// 			 + (pulse2_output - 0.5) * 0.5;
+// 		// return ((1.0 * pulse1_output) - 0.8) * 0.1 +
+// 		// 	    ((1.0 * pulse2_output) - 0.8) * 0.1 +
+// 		// 	    ((2.0 * (noise_output - 0.5))) * 0.1;
+// 	}
+
 }

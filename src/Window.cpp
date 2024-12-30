@@ -39,7 +39,7 @@ bool Window::initialize(const std::string& title, const uint16_t width, const ui
 	}
 
 	glfwMakeContextCurrent(_window);
-	glfwSwapInterval(1); // Disable GLFW VSync Because we are handling it manually
+	glfwSwapInterval(0); // Disable GLFW VSync Because we are handling it manually
 
 	glewExperimental = true;
 	if (glewInit() != GLEW_OK) {
@@ -69,8 +69,9 @@ bool Window::initialize(const std::string& title, const uint16_t width, const ui
 	GUI::getInstance()->initialize(_window, openGL4Version);
 
 	// //Initialize Sound Engine
-	SoundEngine::getInstance()->initialize();
-	SoundEngine::getInstance()->setOutputVolume(0.1f);
+	SoundEngine::getInstance()->initialize(44100,1,8,256);
+	//SoundEngine::getInstance()->initialize(48000, 1, 8, 128);
+	//SoundEngine::getInstance()->setOutputVolume(0.1f);
 	SoundEngine::getInstance()->setNewSampleCallback(NES::soundOut);
 	NES::getInstance()->setAudioSampleRate(SoundEngine::getInstance()->getSampleRate());
 	SoundEngine::getInstance()->start();
@@ -86,14 +87,27 @@ void Window::startRenderingCycle()
 {
 	if (_windowState != SUCCESSFUL_LOAD) return;
 
-	//InputManager* inputManager = InputManager::getInstance();
+    Time lastSystemTime = Clock::now();
+    float residualTime = 0;
 
 	while (!glfwWindowShouldClose(_window)) {
 
-		NES::getInstance()->updateWithAudio();
-		GUI::getInstance()->render();
+		fsec elapsed = Clock::now() - lastSystemTime;
+    	lastSystemTime = Clock::now();
 
-		glfwSwapBuffers(_window);
+		if (residualTime > 0)
+        {
+            residualTime -= elapsed.count();
+			std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(residualTime * 1000)));
+        }
+        else
+        {
+            residualTime += (1.0f / 60.0f) - elapsed.count();
+            NES::getInstance()->updateWithAudio();
+			GUI::getInstance()->render();
+			glfwSwapBuffers(_window);
+        }
+
 		glfwPollEvents();
 	}
 

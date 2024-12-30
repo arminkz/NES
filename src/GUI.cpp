@@ -315,14 +315,14 @@ void GUI::showDisassembledCode()
 			// Highlight current line of code with a different color and different background
 			if (it->first == NES::getInstance()->cpu.pc)
 			{
-				ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 0, 255));
-				ImGui::PushStyleColor(ImGuiCol_TextSelectedBg, IM_COL32(0, 0, 255, 255));
+				//ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 0, 255));
+				//ImGui::PushStyleColor(ImGuiCol_TextSelectedBg, IM_COL32(0, 0, 255, 255));
 			}
 			ImGui::Text("$%04X: %s", it->first, it->second.c_str());
 			if (it->first == NES::getInstance()->cpu.pc)
 			{
-				ImGui::PopStyleColor();
-				ImGui::PopStyleColor();
+				//ImGui::PopStyleColor();
+				//ImGui::PopStyleColor();
 			}
 			it++;
 		}

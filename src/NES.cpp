@@ -215,6 +215,13 @@ float NES::soundOut(double dTime)
 {
     // Syncronizing to the Audio
     // Do enough clocking to match the audio sample rate
+    // fsec elapsed = Clock::now() - NES::getInstance()->lastAudioTime;
+    // if (elapsed.count() > NES::getInstance()->audioTimePerSample)
+    // {
+    //     spdlog::info("Time : {}  Expected: {}", elapsed.count(), NES::getInstance()->audioTimePerSample);
+    // }
+    // NES::getInstance()->lastAudioTime = Clock::now();
+
     while(!NES::getInstance()->clock()) {};
     return static_cast<float>(NES::getInstance()->currAudioSample);
 }   
