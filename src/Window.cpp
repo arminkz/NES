@@ -64,20 +64,18 @@ bool Window::initialize(const std::string& title, const uint16_t width, const ui
 	//glfwSetScrollCallback(_window, InputManager::mouseScrollEvent);
 	//spdlog::info("Input callbacks are set.");
 
-	// OpenGL environment
+	// Game Renderer / ImGui
 	Renderer::getInstance()->initialize(_window, 256, 240, 1, 1);
 	GUI::getInstance()->initialize(_window, openGL4Version);
 
-	// //Initialize Sound Engine
+	// Initialize Sound Engine
 	SoundEngine::getInstance()->initialize(44100,1,8,512);
-	//SoundEngine::getInstance()->initialize(48000, 1, 8, 128);
-	//SoundEngine::getInstance()->setOutputVolume(0.1f);
 	SoundEngine::getInstance()->setNewSampleCallback(NES::soundOut);
 	NES::getInstance()->setAudioSampleRate(SoundEngine::getInstance()->getSampleRate());
 	SoundEngine::getInstance()->start();
 
 	spdlog::info("Window initialized successfully.");
-
++
 	_windowState = SUCCESSFUL_LOAD;
 
 	return true;
