@@ -69,7 +69,7 @@ bool Window::initialize(const std::string& title, const uint16_t width, const ui
 	GUI::getInstance()->initialize(_window, openGL4Version);
 
 	// //Initialize Sound Engine
-	SoundEngine::getInstance()->initialize(44100,1,8,256);
+	SoundEngine::getInstance()->initialize(44100,1,8,512);
 	//SoundEngine::getInstance()->initialize(48000, 1, 8, 128);
 	//SoundEngine::getInstance()->setOutputVolume(0.1f);
 	SoundEngine::getInstance()->setNewSampleCallback(NES::soundOut);

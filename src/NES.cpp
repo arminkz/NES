@@ -222,7 +222,8 @@ float NES::soundOut(double dTime)
     // }
     // NES::getInstance()->lastAudioTime = Clock::now();
 
-    while(!NES::getInstance()->clock()) {};
+    while(!NES::getInstance()->clock()) {}; //Clock until an audio sample is ready
+    //do { NES::getInstance()->clock(); } while (!NES::getInstance()->ppu.frameComplete); //Clock until the frame is complete
     return static_cast<float>(NES::getInstance()->currAudioSample);
 }   
 

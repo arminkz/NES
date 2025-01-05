@@ -1,13 +1,35 @@
 # NES
-NES Console Emulator
+An emulator for the Nintendo Entertainment System (NES) console, developed in C++.
+
+![NES Demo](doc/nes_demo.gif?raw=true "NES Emulator")
+
+
+## Build Instructions
+
+Follow the steps below to build and run the project:
+
+1. **Install Conan**  
+    Ensure you have [Conan](https://conan.io/) installed on your system. You can install it using `pip`:
+    ```bash
+    pip install conan
+    ```
+
+2. **Clone Repository**
+    ```bash
+    git clone --recurse-submodules https://github.com/arminkz/NES.git
+    cd NES
+    ```
+
+3. **Run Build Script**
+    ```bash
+    build_and_run_release.bat
+    ```
 
 
 
 # NES Architecture
 
 ![NES Architecture Diagram](doc/nes_overview.png?raw=true "NES Architecture")
-
-
 
 
 
