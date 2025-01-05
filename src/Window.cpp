@@ -75,7 +75,7 @@ bool Window::initialize(const std::string& title, const uint16_t width, const ui
 	SoundEngine::getInstance()->start();
 
 	spdlog::info("Window initialized successfully.");
-+
+
 	_windowState = SUCCESSFUL_LOAD;
 
 	return true;
