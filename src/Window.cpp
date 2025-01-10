@@ -4,6 +4,7 @@
 
 #include "GUI.h"
 #include "NES.h"
+#include "InputManager.h"
 #include "Renderer.h"
 #include "SoundEngine.h"
 
@@ -64,6 +65,9 @@ bool Window::initialize(const std::string& title, const uint16_t width, const ui
 	//glfwSetScrollCallback(_window, InputManager::mouseScrollEvent);
 	//spdlog::info("Input callbacks are set.");
 
+	// Initialize Input Manager
+	InputManager::getInstance()->initialize(_window);
+
 	// Game Renderer / ImGui
 	Renderer::getInstance()->initialize(_window, 256, 240, 1, 1);
 	GUI::getInstance()->initialize(_window, openGL4Version);
@@ -106,6 +110,8 @@ void Window::startRenderingCycle()
 			glfwSwapBuffers(_window);
         }
 
+		// Poll for events
+		InputManager::getInstance()->pollJoystick();
 		glfwPollEvents();
 	}
 

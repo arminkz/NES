@@ -31,6 +31,8 @@
 *.out
 *.app
 
+src/dontcompile/
+
 build/
 out/
 
