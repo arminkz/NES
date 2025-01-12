@@ -4,27 +4,45 @@ An emulator for the Nintendo Entertainment System (NES) console, developed in C+
 ![NES Demo](doc/nes_demo.gif?raw=true "NES Emulator")
 
 
+## Supported Features
+
+- [X] Cross Platform (Windows / Linux / OSX)
+- [X] Joystick Support
+- [ ] Mappers
+- [ ] Save Game State
+- [X] Developer Tools (CPU/RAM/PPU Inspector)
+- [X] Load ROMs as .nes files
+- [ ] Wiki Pages
+
+
 ## Build Instructions
 
 Follow the steps below to build and run the project:
 
-1. **Install Conan**  
+1. **Install CMake**  
+    Make sure [CMake](https://cmake.org/) is installed on your system. You can download and install it from the [CMake Downloads page](https://cmake.org/download/).
+
+2. **Install Conan**  
     Ensure you have [Conan](https://conan.io/) installed on your system. You can install it using `pip`:
     ```bash
     pip install conan
     ```
 
-2. **Clone Repository**
+3. **Clone Repository**
     ```bash
     git clone --recurse-submodules https://github.com/arminkz/NES.git
     cd NES
     ```
 
-3. **Run Build Script**
+4. **Run Build Script**
     ```bash
     build_and_run_release.bat
     ```
 
+
+## Known Issues
+
+- APU sound is not perfect. Sound artifacts might be heard.
 
 
 # NES Architecture
