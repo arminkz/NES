@@ -123,7 +123,7 @@ private:
         double frequency = 0.0;
         double duty_cycle = 0.0;
         double amplitude = 1.0;
-        int harmonics = 5;
+        int harmonics = 20;
 
         double sample(double time)
         {

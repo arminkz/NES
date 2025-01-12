@@ -17,16 +17,21 @@ public:
 
     void pollJoystick();
 
-private:
-    int joystick1AxesCount;
-    const float* joystick1Axes;
+public:
+    bool joystick1Connected;
     bool joystick1Directions[4];
     int joystick1ButtonCount;
     const unsigned char* joystick1Buttons;
 
-    int joystick2AxesCount;
-    const float* joystick2Axes;
+    bool joystick2Connected;
     bool joystick2Directions[4];
     int joystick2ButtonCount;
     const unsigned char* joystick2Buttons;
+
+private:
+    int joystick1AxesCount;
+    const float* joystick1Axes;
+    
+    int joystick2AxesCount;
+    const float* joystick2Axes;
 };

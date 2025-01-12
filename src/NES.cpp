@@ -1,6 +1,7 @@
 #include "NES.h"
 
 #include "Renderer.h"
+#include "InputManager.h"
 
 NES::NES() 
 {
@@ -150,7 +151,25 @@ bool NES::clock()
     controller[0] |= key_state[6] ? 0x02 : 0x00;
     controller[0] |= key_state[7] ? 0x01 : 0x00;
 
+    controller[0] |= InputManager::getInstance()->joystick1Buttons[0] ? 0x80 : 0x00;
+    controller[0] |= InputManager::getInstance()->joystick1Buttons[1] ? 0x40 : 0x00;
+    controller[0] |= InputManager::getInstance()->joystick1Buttons[2] ? 0x20 : 0x00;
+    controller[0] |= InputManager::getInstance()->joystick1Buttons[3] ? 0x10 : 0x00;
+    controller[0] |= InputManager::getInstance()->joystick1Directions[0] ? 0x08 : 0x00; // UP
+    controller[0] |= InputManager::getInstance()->joystick1Directions[1] ? 0x04 : 0x00; // DOWN
+    controller[0] |= InputManager::getInstance()->joystick1Directions[2] ? 0x02 : 0x00; // LEFT
+    controller[0] |= InputManager::getInstance()->joystick1Directions[3] ? 0x01 : 0x00; // RIGHT
+
     controller[1] = 0x00;
+
+    controller[1] |= InputManager::getInstance()->joystick2Buttons[0] ? 0x80 : 0x00;
+    controller[1] |= InputManager::getInstance()->joystick2Buttons[1] ? 0x40 : 0x00;
+    controller[1] |= InputManager::getInstance()->joystick2Buttons[2] ? 0x20 : 0x00;
+    controller[1] |= InputManager::getInstance()->joystick2Buttons[3] ? 0x10 : 0x00;
+    controller[1] |= InputManager::getInstance()->joystick2Directions[0] ? 0x08 : 0x00; // UP
+    controller[1] |= InputManager::getInstance()->joystick2Directions[1] ? 0x04 : 0x00; // DOWN
+    controller[1] |= InputManager::getInstance()->joystick2Directions[2] ? 0x02 : 0x00; // LEFT
+    controller[1] |= InputManager::getInstance()->joystick2Directions[3] ? 0x01 : 0x00; // RIGHT
 
     // PPU Clock
     ppu.clock();
