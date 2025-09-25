@@ -1,13 +1,12 @@
 // This file is used to avoid including common libraries in each file
 #pragma once
 
-#define GLEW_STATIC
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 #define IMGUI_DEFINE_MATH_OPERATORS
 
 // [Libraries]
 // Don't swap order between GL and GLFW includes!
-#include "GL/glew.h"								
+#include <glad/glad.h>							
 #include "GLFW/glfw3.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/constants.hpp"
@@ -49,5 +48,5 @@
 
 // Typedefs
 typedef std::chrono::high_resolution_clock Clock;
-typedef std::chrono::steady_clock::time_point Time;
+typedef Clock::time_point Time;
 typedef std::chrono::duration<float> fsec;

@@ -22,27 +22,28 @@ Follow the steps below to build and run the project:
 1. **Install CMake**  
     Make sure [CMake](https://cmake.org/) is installed on your system. You can download and install it from the [CMake Downloads page](https://cmake.org/download/).
 
-2. **Install Conan**  
-    Ensure you have [Conan](https://conan.io/) installed on your system. You can install it using `pip`:
-    ```bash
-    pip install conan
-    ```
-
-3. **Clone Repository**
+2. **Clone Repository**
     ```bash
     git clone --recurse-submodules https://github.com/arminkz/NES.git
     cd NES
     ```
 
-4. **Run Build Script**
+4. **Build and Run**
     ```bash
-    build_and_run_release.bat
+    mkdir build
+    cd build
+    cmake ..
+    cmake --build .
+    ./NES
     ```
 
 
 ## Known Issues
 
 - APU sound is not perfect. Sound artifacts might be heard.
+- Right now we are using GLFW for the windowing. we should migrate to SDL.
+
+
 
 
 # NES Architecture

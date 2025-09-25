@@ -42,10 +42,9 @@ bool Window::initialize(const std::string& title, const uint16_t width, const ui
 	glfwMakeContextCurrent(_window);
 	glfwSwapInterval(0); // Disable GLFW VSync Because we are handling it manually
 
-	glewExperimental = true;
-	if (glewInit() != GLEW_OK) {
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		glfwTerminate();
-		spdlog::error("Error initializing GLEW.");
+		spdlog::error("Error initializing GLAD.");
 		return false;
 	}
 

@@ -91,6 +91,13 @@
         "xtree": "cpp",
         "xutility": "cpp",
         "xstddef": "cpp",
-        "coroutine": "cpp"
+        "coroutine": "cpp",
+        "cfenv": "cpp",
+        "cwctype": "cpp",
+        "memory_resource": "cpp",
+        "string_view": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp",
+        "cinttypes": "cpp"
     }
 }

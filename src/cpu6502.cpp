@@ -1,4 +1,4 @@
-#include "CPU6502.h"
+#include "cpu6502.h"
 #include "NES.h"
 
 CPU6502::CPU6502()

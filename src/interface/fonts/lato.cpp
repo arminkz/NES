@@ -2,7 +2,7 @@
 // Exported using binary_to_compressed_c.cpp
 #include "lato.hpp"
 
-static const char lato_compressed_data_base85[61215 + 1] =
+const char lato_compressed_data_base85[61215 + 1] =
     "7])#######u5e2L'/###I),##aq0hLjKI##`QdL<+;sYA)f4/(?-CG):FxF>sq=$>6qTS.&q%31G^n42WmIGJ/4eCs=l/[5aNV=BITXJPl=*`s'->>#;1XGHY6$%+JnRfL[4%##:Jk7D"
     "%N#dG^EE%tK[qr$Eb(*HP;r$#K[oi'`?Ps/'-0%JJq5dOmnZM2vHP.qa,d<BjXrvq:eL+rJ=oY-TT$=(i/[K%0n+G-]sEn/<_[FHBg`#A&3M>6oH:;$E2JuB/@><p*RlIqb5YY#=I[^I"
     "S]N9%$+m<-o1jq/+>00Fe-]Y6Aa<;2_1NP&6%S+Hf0b-DC@sl&kcf$$ucFVC,3?pR;),##<hWX%f*=;$PU$##lJG2T(sq%4DLKV6#mt/*hIi`5WV,G41x8q/PKSA,RLr;$U7N0;1CYC?"

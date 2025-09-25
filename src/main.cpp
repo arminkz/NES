@@ -1,12 +1,14 @@
 #include "stdafx.h"
 
 #include "Window.h"
-#include <windows.h> // DWORD is undefined otherwise
 
-//Use NVIDIA graphic card instead of Intel
+//Use NVIDIA graphic card instead of Intel (Windows only)
+#ifdef _WIN32
+#include <windows.h> // DWORD is undefined otherwise
 extern "C" {
 	_declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
 }
+#endif
 
 int main(int argc, char* argv[])
 {

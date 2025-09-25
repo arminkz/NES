@@ -4,7 +4,7 @@
 #include "interface/fonts/font_awesome.hpp"
 #include "interface/fonts/lato.hpp"
 #include "interface/fonts/IconsFontAwesome5.h"
-#include "Utilities/Singleton.h"
+#include "utilities/Singleton.h"
 
 
 class GUI : public Singleton<GUI>

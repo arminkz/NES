@@ -1,4 +1,4 @@
-#include "PPU2C02.h"
+#include "ppu2C02.h"
 
 #include "Renderer.h"
 #include "NES.h"

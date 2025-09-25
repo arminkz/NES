@@ -1,7 +1,7 @@
 #pragma once
 #include "stdafx.h"
 
-#include "Utilities/Singleton.h"
+#include "utilities/Singleton.h"
 
 class Window : public Singleton<Window>
 {
